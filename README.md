@@ -1,13 +1,16 @@
-# ProductFlow: Product Manager Project Tracker
+# Zentriq: AI-Powered Product Management Platform
 
-Full-stack version of the ProductFlow Overview dashboard.
+Full-stack enterprise AI Product Management and Development Intelligence Platform.
 
 | Layer | Technology |
 |---|---|
 | Front end | React 18 + Tailwind CSS (Vite) |
 | Back end | Python + FastAPI |
-| Database | PostgreSQL on Supabase |
+| Database | SQLite / PostgreSQL on Supabase |
 | ORM | SQLAlchemy 2.0 |
+| AI Copilot | Google Gemini 2.5 Flash |
+| Email Service | Resend API Integration |
+| Version Control | GitHub Integration (`Aman-kakkar70686/zentriq`) |
 | Authentication | JWT |
 | API communication | REST + Axios |
 
@@ -146,6 +149,11 @@ Upgrades the AI PM Copilot with a comprehensive Requirement Intelligence Engine 
 - **AI Evaluation & Benchmark Test Suite**:
   - Run empirical precision, recall, and F1 calculations against 5 benchmark PRDs.
 - **Supabase Edge Function**: `supabase/functions/analyse-prd-requirements/index.ts` for edge deployment.
+
+## GitHub Live Activity Tracking
+- **Direct Repository Integration**: Connected to `Aman-kakkar70686/zentriq` via GitHub REST API.
+- **Automatic Team Mapping**: Maps commits and pull requests to registered team members (e.g. Aman Kakkar, Alfie Mathew).
+- **Dashboard Synchronization**: Real-time commits feed on the Team Workspace tab and automatic activity logging on the Overview Dashboard.
 
 ## Notes
 
