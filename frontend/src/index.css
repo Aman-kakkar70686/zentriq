@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-canvas text-ink font-sans antialiased; }
+  button { @apply cursor-pointer; }
+  :focus-visible { @apply outline outline-2 outline-offset-2 outline-brand rounded-md; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

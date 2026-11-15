@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+.pnpm-store/
+
+# Python Virtual Environments
+.venv/
+backend/.venv/
+venv/
+env/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Build Outputs
+dist/
+frontend/dist/
+build/
+*.egg-info/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+zentriq.db
+backend/zentriq.db
+
+# Environment Secrets
+.env
+*.env
+.env.*
+backend/.env
+frontend/.env
+!*.env.example
+
+# IDE & OS Metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
