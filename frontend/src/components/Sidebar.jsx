@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, CheckCircle2, ChevronDown, ChevronRight, FileCheck2, Folder, HelpCircle, History, Inbox, LayoutGrid, LineChart, Mail, Route, Settings, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
+import { BarChart3, Calendar, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, FileCheck2, Folder, HelpCircle, History, Inbox, LayoutGrid, LineChart, Mail, Route, Settings, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Dot, Logo } from './ui';
@@ -20,6 +20,7 @@ export default function Sidebar() {
     data, openDrawer, menuOpen, setMenuOpen,
     currentView, teamTab, teamExpanded, setTeamExpanded,
     selectedProjectId, projectWorkspaceTab,
+    sidebarCollapsed, setSidebarCollapsed, toggleSidebar,
     navigateToProjects, navigateToTeam, navigateToOverview,
     navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,
@@ -31,9 +32,35 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Floating Arrow Tab to slide the sidebar back onto the screen */}
+      {sidebarCollapsed && (
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed(false)}
+          className="fixed left-0 top-20 z-50 bg-[#174B3A] text-white hover:bg-[#1f634d] px-2.5 py-3 rounded-r-xl shadow-2xl border border-l-0 border-white/20 flex items-center gap-2 transition-all hover:pl-3.5 group animate-in slide-in-from-left duration-200"
+          title="Open sidebar navigation options"
+        >
+          <ChevronRight size={18} className="text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
+          <span className="text-xs font-semibold tracking-wide pr-1 hidden sm:inline">Menu</span>
+        </button>
+      )}
+
       {menuOpen && <div className="fixed inset-0 bg-ink/30 z-30 lg:hidden" onClick={() => setMenuOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 w-56 bg-side z-40 flex flex-col px-2.5 pt-4 pb-2 overflow-y-auto transition-transform duration-200 ${menuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="flex items-center gap-2.5 px-2 pb-2 text-[#F7F6F2] font-bold text-base tracking-tight"><Logo /> Zentriq</div>
+      <aside className={`fixed inset-y-0 left-0 w-60 bg-side z-40 flex flex-col px-2.5 pt-4 pb-2 overflow-y-auto transition-transform duration-300 ease-in-out shadow-2xl ${
+        sidebarCollapsed ? '-translate-x-full' : (menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
+      }`}>
+        <div className="flex items-center justify-between px-2 pb-2">
+          <div className="flex items-center gap-2.5 text-[#F7F6F2] font-bold text-base tracking-tight"><Logo /> Zentriq</div>
+          {/* Arrow button to slide sidebar out of the screen */}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(true)}
+            className="p-1.5 rounded-lg text-[#8E9488] hover:text-[#F7F6F2] hover:bg-white/10 transition"
+            title="Collapse sidebar (Expand to full-screen)"
+          >
+            <ChevronLeft size={16} />
+          </button>
+        </div>
         <Group>Workspace</Group>
         <Item
           icon={LayoutGrid}
@@ -120,6 +147,7 @@ export default function Sidebar() {
           label="Roadmap"
           active={currentView === 'projects' && projectWorkspaceTab === 'roadmap'}
           onClick={() => {
+            setSidebarCollapsed(true); // Automatically remove sidebar and show arrow
             const targetId = selectedProjectId || (data?.projects?.[0]?.id || 1);
             navigateToProjects(targetId, 'roadmap');
             window.scrollTo({ top: 0, behavior: 'smooth' });

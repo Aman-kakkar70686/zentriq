@@ -18,7 +18,7 @@ import MemberProfileModal from '../components/team/MemberProfileModal';
 import ReassignTaskModal from '../components/team/ReassignTaskModal';
 
 export default function TeamWorkspace() {
-  const { teamTab, setTeamTab, toast, reload: reloadGlobal } = useApp();
+  const { teamTab, setTeamTab, toast, reload: reloadGlobal, sidebarCollapsed } = useApp();
   const [teamData, setTeamData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,7 +60,7 @@ export default function TeamWorkspace() {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <div className="lg:ml-56">
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-60'}`}>
         <TopBar />
         <main className="max-w-[1240px] px-4 lg:px-10 pt-7 pb-24">
           {/* Header Title & Description */}

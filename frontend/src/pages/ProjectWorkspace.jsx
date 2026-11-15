@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Folder, Users, Calendar, Clock, CheckCircle2, AlertCircle, Sparkles,
   ArrowLeft, Search, Plus, ExternalLink, FileText, Download, Edit3, Check,
-  X, ChevronRight, Mail, Layers, ShieldCheck, ArrowUpRight, BarChart2,
+  X, ChevronRight, ChevronLeft, Mail, Layers, ShieldCheck, ArrowUpRight, BarChart2,
   AlertTriangle, RefreshCw, Send, BookOpen, GitBranch
 } from 'lucide-react';
 import api, { errMsg } from '../api/client';
@@ -20,11 +20,13 @@ export default function ProjectWorkspace() {
   const {
     data, reload, selectedProjectId, setSelectedProjectId,
     projectWorkspaceTab, setProjectWorkspaceTab,
+    sidebarCollapsed, setSidebarCollapsed, toggleSidebar,
     setCreateType, openEmailComposer, toast
   } = useApp();
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeTab, setActiveTab] = useState(projectWorkspaceTab || 'roadmap'); // 'roadmap' | 'sprints' | 'docs' | 'team' | 'settings'
   const [docSubTab, setDocSubTab] = useState('proposal'); // 'proposal' | 'srs' | 'prds'
@@ -63,6 +65,7 @@ export default function ProjectWorkspace() {
 
   // Fetch single project detailed view
   const fetchProjectDetail = async (id) => {
+    setDetailLoading(true);
     try {
       const res = await api.get(`/projects/${id}`);
       setSelectedProject(res.data);
@@ -76,6 +79,8 @@ export default function ProjectWorkspace() {
     } catch (err) {
       console.error('Error fetching project detail:', err);
       if (toast) toast('Could not load project details');
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -239,15 +244,15 @@ export default function ProjectWorkspace() {
   return (
     <div className="min-h-screen bg-bg text-ink flex">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-56">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-0' : 'lg:pl-60'}`}>
         <TopBar />
         
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full mx-auto animate-in fade-in duration-150">
+        <main className={`flex-1 px-4 sm:px-6 lg:px-8 py-6 w-full mx-auto animate-in fade-in duration-150 ${activeTab === 'roadmap' ? 'max-w-none' : 'max-w-7xl'}`}>
           
           {/* ============================================================== */}
           {/* VIEW A: PROJECT DIRECTORY (ALL PROJECTS LIST)                  */}
           {/* ============================================================== */}
-          {!selectedProject ? (
+          {!selectedProjectId ? (
             <div className="space-y-6">
               
               {/* Header */}
@@ -525,6 +530,13 @@ export default function ProjectWorkspace() {
                 </div>
               )}
             </div>
+          ) : (detailLoading || !selectedProject || selectedProject.id !== selectedProjectId) ? (
+            /* DETAIL LOADING SPINNER */
+            <div className="py-24 text-center space-y-3 bg-card border border-line rounded-2xl p-8">
+              <RefreshCw size={28} className="animate-spin text-brand mx-auto" />
+              <h4 className="text-sm font-bold text-ink">Loading Project Workspace & Tree Roadmap...</h4>
+              <p className="text-xs text-mute">Synchronizing custom branches, deliverables, and team assignments.</p>
+            </div>
           ) : (
             /* ============================================================== */
             /* VIEW B: PROJECT DETAIL WORKSPACE (FOR SELECTED PROJECT)       */
@@ -532,15 +544,28 @@ export default function ProjectWorkspace() {
             <div className="space-y-6">
               
               {/* Back Breadcrumb Bar */}
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setSelectedProjectId(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink2 hover:text-brand transition"
-                >
-                  <ArrowLeft size={14} />
-                  <span>← Back to All Projects</span>
-                </button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProjectId(null)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink2 hover:text-brand transition"
+                  >
+                    <ArrowLeft size={14} />
+                    <span>← Back to All Projects</span>
+                  </button>
+
+                  {/* Toggle Sidebar Full Screen Button */}
+                  <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-line bg-card hover:bg-card2 text-ink2 hover:text-ink transition shadow-xs"
+                    title={sidebarCollapsed ? "Show sidebar options" : "Hide sidebar for wide screen"}
+                  >
+                    {sidebarCollapsed ? <ChevronRight size={14} className="text-brand" /> : <ChevronLeft size={14} />}
+                    <span>{sidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar (Full Canvas)'}</span>
+                  </button>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <Btn

@@ -23,6 +23,12 @@ export function AppProvider({ children }) {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [projectWorkspaceTab, setProjectWorkspaceTab] = useState('roadmap');
 
+  // Sidebar collapsed state (expandable/collapsible with arrow for Full-screen Roadmap)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => !prev);
+  }, []);
+
   const navigateToProjects = useCallback((projectId = null, tab = null) => {
     setSelectedProjectId(projectId);
     if (tab) setProjectWorkspaceTab(tab);
@@ -173,6 +179,7 @@ export function AppProvider({ children }) {
     currentView, setCurrentView, teamTab, setTeamTab, teamExpanded, setTeamExpanded,
     selectedProjectId, setSelectedProjectId, navigateToProjects,
     projectWorkspaceTab, setProjectWorkspaceTab,
+    sidebarCollapsed, setSidebarCollapsed, toggleSidebar,
     navigateToTeam, navigateToOverview,
     aiExpanded, setAiExpanded, activePrd, setActivePrd, navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,

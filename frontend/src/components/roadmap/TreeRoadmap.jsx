@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   GitBranch, GitFork, Plus, Edit3, Trash2, CheckCircle2, Clock,
-  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, Sparkles,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronLeft, ChevronDown, Sparkles,
   Save, RefreshCw, ZoomIn, ZoomOut, Maximize2, Search, Filter,
   Calendar, User, Check, X, Shield, ArrowRight, CornerDownRight,
   Layers, ListTree, SlidersHorizontal
@@ -75,8 +75,28 @@ function findAndMutate(nodes, targetId, mutateFn) {
 }
 
 export default function TreeRoadmap({ project, onUpdateProject }) {
-  const { toast } = useApp();
-  const [treeData, setTreeData] = useState(null);
+  const { toast, sidebarCollapsed, toggleSidebar } = useApp();
+  
+  // Safe synchronous initial state to prevent any null-access crash on mount
+  const [treeData, setTreeData] = useState(() => {
+    if (project?.roadmap_tree) {
+      try {
+        const parsed = typeof project.roadmap_tree === 'string'
+          ? JSON.parse(project.roadmap_tree)
+          : project.roadmap_tree;
+        if (parsed && Array.isArray(parsed.branches)) return parsed;
+      } catch (e) {
+        console.error('Initial parse error:', e);
+      }
+    }
+    return {
+      root_title: `${project?.name || 'Project'} Roadmap Tree`,
+      vision: project?.description || 'Custom milestone tree roadmap',
+      updated_at: new Date().toISOString().split('T')[0],
+      branches: []
+    };
+  });
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -106,31 +126,39 @@ export default function TreeRoadmap({ project, onUpdateProject }) {
     notes: ''
   });
 
-  // Load tree roadmap from project prop or fetch
+  // Load tree roadmap from project prop or fetch with full try/catch
   useEffect(() => {
     if (project?.roadmap_tree) {
-      const parsed = typeof project.roadmap_tree === 'string'
-        ? JSON.parse(project.roadmap_tree)
-        : project.roadmap_tree;
-      setTreeData(parsed);
-      // Auto-expand all top-level and 2nd level nodes
-      const initialExpanded = new Set();
-      parsed.branches?.forEach(b => {
-        initialExpanded.add(b.id);
-        b.children?.forEach(c => initialExpanded.add(c.id));
-      });
-      setExpandedNodes(initialExpanded);
-      setIsDirty(false);
-    } else {
-      // Default empty structure
-      setTreeData({
-        root_title: `${project?.name || 'Project'} Roadmap Tree`,
-        vision: project?.description || 'Custom milestone tree roadmap',
-        updated_at: new Date().toISOString().split('T')[0],
-        branches: []
-      });
-      setIsDirty(false);
+      try {
+        const parsed = typeof project.roadmap_tree === 'string'
+          ? JSON.parse(project.roadmap_tree)
+          : project.roadmap_tree;
+        if (parsed) {
+          const safeBranches = Array.isArray(parsed.branches) ? parsed.branches : [];
+          setTreeData({ ...parsed, branches: safeBranches });
+          // Auto-expand all top-level and 2nd level nodes
+          const initialExpanded = new Set();
+          safeBranches.forEach(b => {
+            initialExpanded.add(b.id);
+            b.children?.forEach(c => initialExpanded.add(c.id));
+          });
+          setExpandedNodes(initialExpanded);
+          setIsDirty(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Error parsing roadmap_tree in useEffect:', err);
+      }
     }
+
+    // Default empty structure
+    setTreeData({
+      root_title: `${project?.name || 'Project'} Roadmap Tree`,
+      vision: project?.description || 'Custom milestone tree roadmap',
+      updated_at: new Date().toISOString().split('T')[0],
+      branches: []
+    });
+    setIsDirty(false);
   }, [project?.id, project?.roadmap_tree]);
 
   // Compute Tree Stats
@@ -914,13 +942,24 @@ export default function TreeRoadmap({ project, onUpdateProject }) {
               <span>Outline</span>
             </button>
           </div>
+
+          {/* Toggle Sidebar Button */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-line bg-card2/80 hover:bg-card text-ink2 hover:text-brand transition shadow-xs ml-1"
+            title={sidebarCollapsed ? "Open sidebar options" : "Hide sidebar for wide screen"}
+          >
+            {sidebarCollapsed ? <ChevronRight size={13} className="text-brand" /> : <ChevronLeft size={13} />}
+            <span className="hidden sm:inline">{sidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}</span>
+          </button>
         </div>
       </div>
 
       {/* 3. ROADMAP TREE CANVAS OR OUTLINE VIEW */}
       {viewMode === 'tree' ? (
         <div className="bg-card border border-line rounded-xl p-6 shadow-xs overflow-x-auto min-h-[480px]">
-          {treeData?.branches?.length === 0 ? (
+          {(!treeData?.branches || treeData.branches.length === 0) ? (
             <div className="py-16 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto">
                 <GitBranch size={24} />
@@ -973,8 +1012,8 @@ export default function TreeRoadmap({ project, onUpdateProject }) {
 
               {/* Top-Level Branches (Phases / Milestones) */}
               <div className="space-y-6 pl-4 border-l-2 border-brand/30">
-                {treeData.branches.map((branch, idx) =>
-                  renderCanvasBranch(branch, 0, idx === treeData.branches.length - 1, 'root')
+                {(treeData?.branches || []).map((branch, idx) =>
+                  renderCanvasBranch(branch, 0, idx === (treeData.branches.length - 1), 'root')
                 )}
               </div>
             </div>
@@ -983,12 +1022,12 @@ export default function TreeRoadmap({ project, onUpdateProject }) {
       ) : (
         /* OUTLINE HIERARCHICAL LIST VIEW */
         <div className="bg-card border border-line rounded-xl p-5 shadow-xs space-y-2">
-          {treeData?.branches?.length === 0 ? (
+          {(!treeData?.branches || treeData.branches.length === 0) ? (
             <div className="py-12 text-center text-mute text-xs">
               No roadmap branches yet. Click "Add Milestone / Phase" to start.
             </div>
           ) : (
-            treeData.branches.map(branch => renderOutlineBranch(branch, 0))
+            (treeData?.branches || []).map(branch => renderOutlineBranch(branch, 0))
           )}
         </div>
       )}
@@ -1143,3 +1182,4 @@ export default function TreeRoadmap({ project, onUpdateProject }) {
     </div>
   );
 }
+
