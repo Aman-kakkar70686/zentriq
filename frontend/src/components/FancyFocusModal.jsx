@@ -1,13 +1,57 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Target, X, Volume2, VolumeX, Sparkles, CheckCircle2,
   Clock, AlertTriangle, ArrowRight, ShieldAlert, Check,
-  Layers, ExternalLink, RefreshCw
+  Layers, ExternalLink, RefreshCw, Volume1
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Btn, Dot } from './ui';
 import { fmtDate, timeAgo } from '../lib/format';
+
+// Select natural, clear female voice across Windows, Edge, Chrome, and Mac
+const selectFemaleVoice = (voices) => {
+  if (!voices || voices.length === 0) return null;
+
+  const enVoices = voices.filter(v => v.lang && v.lang.startsWith('en'));
+  const candidatePool = enVoices.length > 0 ? enVoices : voices;
+
+  // Ranked female voice names across platforms:
+  // Windows: Zira, Susan, Hazel
+  // Edge Natural: Jenny, Aria, Neerja, Swara
+  // Chrome: Google US English (Female)
+  // Mac/iOS: Samantha, Victoria, Karen
+  const preferredFemaleNames = [
+    'zira',
+    'jenny',
+    'aria',
+    'google us english',
+    'google uk english female',
+    'neerja',
+    'swara',
+    'samantha',
+    'victoria',
+    'karen',
+    'susan',
+    'hazel',
+    'female'
+  ];
+
+  for (const nameKey of preferredFemaleNames) {
+    const match = candidatePool.find(v => v.name.toLowerCase().includes(nameKey));
+    if (match) return match;
+  }
+
+  // Fallback: exclude explicit male voices
+  const nonMale = candidatePool.find(v => {
+    const n = v.name.toLowerCase();
+    return !n.includes('david') && !n.includes('mark') && !n.includes('george') &&
+           !n.includes('ravi') && !n.includes('guy') && !n.includes('male') &&
+           !n.includes('prabhat');
+  });
+
+  return nonMale || candidatePool[0];
+};
 
 export default function FancyFocusModal({ isOpen, onClose }) {
   const { data, openDrawer, navigateToProjects } = useApp();
@@ -15,71 +59,177 @@ export default function FancyFocusModal({ isOpen, onClose }) {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechMuted, setSpeechMuted] = useState(false);
+  const [currentSpeakingIndex, setCurrentSpeakingIndex] = useState(-1);
+  const [activeVoiceName, setActiveVoiceName] = useState('AI Female Voice');
   const [completedItems, setCompletedItems] = useState(new Set());
 
   const focusList = data?.focus || [];
   const userName = user?.name ? user.name.split(' ')[0] : 'Aman';
 
-  // Speak voice greeting using browser Web Speech API
-  const speakFocusBriefing = (force = false) => {
+  // Queue references for sequential non-truncating audio playback
+  const speechQueueRef = useRef([]);
+  const keepAliveIntervalRef = useRef(null);
+
+  // Stop all speech and clear queues safely
+  const stopAllSpeech = useCallback(() => {
+    if (keepAliveIntervalRef.current) {
+      clearInterval(keepAliveIntervalRef.current);
+      keepAliveIntervalRef.current = null;
+    }
+    speechQueueRef.current = [];
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+    setCurrentSpeakingIndex(-1);
+  }, []);
+
+  // Process next audio chunk in queue
+  const playNextQueueItem = useCallback((selectedVoice) => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (speechQueueRef.current.length === 0) {
+      setIsSpeaking(false);
+      setCurrentSpeakingIndex(-1);
+      if (keepAliveIntervalRef.current) {
+        clearInterval(keepAliveIntervalRef.current);
+        keepAliveIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const item = speechQueueRef.current.shift();
+    setCurrentSpeakingIndex(item.taskIndex);
+
+    const utterance = new SpeechSynthesisUtterance(item.text);
+    // Optimized female speech acoustics: clear, slightly elevated pitch, pleasant speed
+    utterance.rate = 0.98;
+    utterance.pitch = 1.12;
+    utterance.lang = 'en-US';
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      // Natural 180ms cadence between tasks
+      setTimeout(() => {
+        playNextQueueItem(selectedVoice);
+      }, 180);
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech playback notification:', e);
+      playNextQueueItem(selectedVoice);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  // Speak complete focus briefing with ALL tasks without truncation
+  const speakFocusBriefing = useCallback((force = false) => {
     if (!('speechSynthesis' in window)) return;
     if (speechMuted && !force) return;
 
-    window.speechSynthesis.cancel(); // Stop any previous speech
+    stopAllSpeech();
 
-    const topTasks = focusList.slice(0, 3).map(f => f.title).join(', ');
-    const speechText = focusList.length > 0
-      ? `Welcome ${userName} sir, today's tasks are: ${topTasks}.`
-      : `Welcome ${userName} sir, today's tasks are all completed. You are all clear for today!`;
-
-    const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.lang = 'en-US';
-
-    // Pick best English voice if available
-    const setVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v =>
-        v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('David') || v.name.includes('Jenny'))
-      ) || voices.find(v => v.lang.startsWith('en'));
-      if (preferredVoice) utterance.voice = preferredVoice;
-    };
-
-    setVoice();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = setVoice;
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = selectFemaleVoice(voices);
+    if (femaleVoice?.name) {
+      const cleanName = femaleVoice.name.replace(/Microsoft |Online \(Natural\) |Google |Desktop /g, '').split('-')[0].trim();
+      setActiveVoiceName(`${cleanName} (Female)`);
     }
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    // Build complete conversational briefing script
+    const queue = [];
 
-    window.speechSynthesis.speak(utterance);
-  };
+    // 1. Warm Greeting & Headline
+    queue.push({
+      text: `Welcome ${userName} sir. Here is your complete focus briefing for today.`,
+      taskIndex: -1
+    });
+
+    if (focusList.length === 0) {
+      queue.push({
+        text: `All tasks and sprint deliverables are clear. No pending bottlenecks. Have a great day!`,
+        taskIndex: -1
+      });
+    } else {
+      // 2. Summary count
+      queue.push({
+        text: `You have ${focusList.length} priority items requiring your direct attention.`,
+        taskIndex: -1
+      });
+
+      // 3. Complete, detailed announcement of EVERY task (no slicing, no skipping)
+      focusList.forEach((f, idx) => {
+        let taskSentence = `Task ${idx + 1}: ${f.title}`;
+        if (f.project) taskSentence += ` in project ${f.project}.`;
+        else taskSentence += `.`;
+
+        if (f.context) {
+          taskSentence += ` Details: ${f.context}.`;
+        }
+
+        queue.push({
+          text: taskSentence,
+          taskIndex: idx
+        });
+      });
+
+      // 4. Outro
+      queue.push({
+        text: `That concludes all your priority items for today. Zentriq is ready when you are.`,
+        taskIndex: -1
+      });
+    }
+
+    speechQueueRef.current = queue;
+
+    // Chrome long-speech keep-alive heartbeat (prevents browser auto-pausing after 15s)
+    keepAliveIntervalRef.current = setInterval(() => {
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 8000);
+
+    playNextQueueItem(femaleVoice);
+  }, [focusList, userName, speechMuted, stopAllSpeech, playNextQueueItem]);
 
   // Trigger speech when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Small timeout to allow user interaction context
+      // Ensure voices are loaded
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+
       const timer = setTimeout(() => {
         speakFocusBriefing();
-      }, 250);
+      }, 300);
+
       return () => {
         clearTimeout(timer);
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        stopAllSpeech();
       };
     } else {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      stopAllSpeech();
     }
-  }, [isOpen, focusList.length]);
+  }, [isOpen, speakFocusBriefing, stopAllSpeech]);
 
   if (!isOpen) return null;
 
   const toggleMute = () => {
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      stopAllSpeech();
       setSpeechMuted(true);
     } else {
       setSpeechMuted(false);
@@ -143,8 +293,8 @@ export default function FancyFocusModal({ isOpen, onClose }) {
           </p>
 
           {/* Audio Visualizer Pill */}
-          <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
               {/* Sound wave bars */}
               <div className="flex items-center gap-0.5 h-4">
                 <span className={`w-1 rounded-full bg-emerald-300 ${isSpeaking ? 'h-4 animate-bounce' : 'h-1.5'}`} />
@@ -152,17 +302,24 @@ export default function FancyFocusModal({ isOpen, onClose }) {
                 <span className={`w-1 rounded-full bg-emerald-300 ${isSpeaking ? 'h-5 animate-bounce delay-150' : 'h-3'}`} />
                 <span className={`w-1 rounded-full bg-emerald-300 ${isSpeaking ? 'h-2 animate-pulse delay-100' : 'h-1.5'}`} />
               </div>
-              <span className="text-xs font-semibold text-emerald-200">
-                {isSpeaking ? 'AI Voice Briefing Active...' : 'Audio Greeting Ready'}
-              </span>
+              <div className="text-xs">
+                <span className="font-semibold text-emerald-200 block leading-tight">
+                  {isSpeaking
+                    ? (currentSpeakingIndex >= 0 ? `Announcing Task ${currentSpeakingIndex + 1} of ${focusList.length}...` : 'Starting Voice Briefing...')
+                    : 'Voice Briefing Ready'}
+                </span>
+                <span className="text-[10px] text-emerald-200/70">
+                  {activeVoiceName} • Natural Audio
+                </span>
+              </div>
             </div>
 
             <button
               onClick={toggleMute}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition active:scale-95 shadow-xs"
             >
               {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
-              <span>{isSpeaking ? 'Mute Voice' : 'Replay Audio'}</span>
+              <span>{isSpeaking ? 'Mute Voice' : 'Replay Full Briefing'}</span>
             </button>
           </div>
         </div>
@@ -182,6 +339,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
           ) : (
             focusList.map((f, idx) => {
               const isChecked = completedItems.has(f.id);
+              const isCurrentlyBeingSpoken = isSpeaking && currentSpeakingIndex === idx;
 
               return (
                 <div
@@ -192,8 +350,10 @@ export default function FancyFocusModal({ isOpen, onClose }) {
                     else openDrawer('task', f.ref);
                     onClose();
                   }}
-                  className={`group p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                    isChecked
+                  className={`group p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 relative ${
+                    isCurrentlyBeingSpoken
+                      ? 'bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/60 shadow-md scale-[1.01]'
+                      : isChecked
                       ? 'bg-slate-50/80 border-slate-200 opacity-60'
                       : f.kind === 'blocked'
                       ? 'bg-rose-50/40 border-rose-200 hover:border-rose-400 hover:shadow-md'
@@ -217,7 +377,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
 
                   {/* Task details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         f.kind === 'blocked'
                           ? 'bg-rose-100 text-rose-800'
@@ -232,6 +392,11 @@ export default function FancyFocusModal({ isOpen, onClose }) {
                           • {f.project}
                         </span>
                       )}
+                      {isCurrentlyBeingSpoken && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500 text-white animate-pulse">
+                          <Volume2 size={11} /> Speaking Now
+                        </span>
+                      )}
                     </div>
 
                     <h4 className={`text-xs font-bold text-ink leading-snug group-hover:text-brand transition ${
@@ -240,9 +405,9 @@ export default function FancyFocusModal({ isOpen, onClose }) {
                       {f.title}
                     </h4>
 
-                    {f.sub && (
+                    {f.context && (
                       <p className="text-[11px] text-mute mt-0.5 line-clamp-1">
-                        {f.sub}
+                        {f.context}
                       </p>
                     )}
                   </div>
