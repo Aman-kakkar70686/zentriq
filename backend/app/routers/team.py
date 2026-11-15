@@ -320,9 +320,43 @@ def get_github_activity(db: Session = Depends(get_db)):
             for c in raw_commits:
                 author_login = (c.get("author") or {}).get("login", "")
                 mapped_member = user_gh_map.get(author_login.lower()) if author_login else None
+                mapped_user = None
+                if author_login:
+                    mapped_user = next((u for u in users if u.github_username and u.github_username.lower() == author_login.lower()), None)
+                if not mapped_member:
+                    commit_author = c.get("commit", {}).get("author", {})
+                    c_name = commit_author.get("name", "").lower()
+                    c_email = commit_author.get("email", "").lower()
+                    for u in users:
+                        if (u.name and u.name.lower() in c_name) or (u.email and u.email.lower() == c_email):
+                            mapped_member = u.name
+                            mapped_user = u
+                            break
+
+                sha_short = c.get("sha", "")[:7]
+                msg_short = c.get("commit", {}).get("message", "").split("\n")[0][:100]
+
+                # Sync to ActivityLog so it also shows up on the Overview Dashboard
+                existing_act = db.scalar(select(ActivityLog).where(ActivityLog.subject == f"[{sha_short}] {msg_short}"))
+                if not existing_act and (mapped_user or mapped_member):
+                    u_id = mapped_user.id if mapped_user else None
+                    act_entry = ActivityLog(
+                        user_id=u_id,
+                        kind="code",
+                        action="pushed commit",
+                        subject=f"[{sha_short}] {msg_short}",
+                        detail=f"to {repo}",
+                        created_at=datetime.utcnow(),
+                    )
+                    db.add(act_entry)
+                    try:
+                        db.commit()
+                    except Exception:
+                        db.rollback()
+
                 commits.append({
-                    "sha": c.get("sha", "")[:7],
-                    "message": c.get("commit", {}).get("message", "").split("\n")[0],
+                    "sha": sha_short,
+                    "message": msg_short,
                     "author_login": author_login or c.get("commit", {}).get("author", {}).get("name", "Unknown"),
                     "author_avatar": (c.get("author") or {}).get("avatar_url", ""),
                     "mapped_member": mapped_member,

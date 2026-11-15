@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import select
 
 from .database import Base, SessionLocal, engine
-from .models import ActivityLog, Decision, Meeting, PRD, Project, Task, TeamMember, User
+from .models import ActivityLog, Decision, GitHubSettings, Meeting, PRD, Project, Task, TeamMember, User
 from .security import hash_password
 
 PASSWORD = "zentriq123"
@@ -21,7 +21,7 @@ def run():
         return
     now, today = datetime.utcnow(), date.today()
     users = {
-        "Aman": User(name="Aman Kakkar", email="amankakkar70686@gmail.com", password_hash=hash_password(PASSWORD), role="Product Manager", designation="Lead Product Manager", skills="Product Strategy, Roadmap, Sprint Planning, UX", github_username="amankakkar", availability_status="available"),
+        "Aman": User(name="Aman Kakkar", email="amankakkar70686@gmail.com", password_hash=hash_password(PASSWORD), role="Product Manager", designation="Lead Product Manager", skills="Product Strategy, Roadmap, Sprint Planning, UX", github_username="Aman-kakkar70686", availability_status="available"),
         "Alfie": User(name="Alfie Mathew", email="alfiebpl85@gmail.com", password_hash=hash_password(PASSWORD), role="Developer", designation="Software Engineer", skills="React, Python, Backend, API Integration", github_username="alfie-dev", availability_status="available"),
         "Rahul": User(name="Rahul", email="rahul@zentriq.dev", password_hash=hash_password(PASSWORD), role="Developer", designation="Lead Full-Stack Developer", skills="Python, FastAPI, React, Node.js, PostgreSQL, Docker", github_username="rahul-dev", availability_status="overloaded"),
         "Arjun": User(name="Arjun", email="arjun@zentriq.dev", password_hash=hash_password(PASSWORD), role="QA Tester", designation="Senior QA & Automation Engineer", skills="Cypress, Jest, PyTest, Selenium, API Testing, Postman", github_username="arjun-qa", availability_status="working"),
@@ -116,6 +116,7 @@ def run():
         Decision(project_id=projects["VSLL Logistics Portal"].id, title="Notification Strategy", question="Email + WhatsApp vs Email only", options=["Email + WhatsApp", "Email only"], created_at=now - timedelta(hours=20)),
         Decision(project_id=projects["E-Commerce Platform"].id, title="API Architecture", question="REST vs GraphQL", options=["REST", "GraphQL"], created_at=now - timedelta(hours=10)),
         Meeting(title="VSLL Sprint Review", starts_at=now + timedelta(hours=2), participants=4, teams_link="https://teams.microsoft.com/l/meetup-join/19%3ameeting_zentriq_demo%40thread.v2/0", created_by_id=U("Aman")),
+        GitHubSettings(repo_owner="Aman-kakkar70686", repo_name="zentriq", is_connected=True),
     ])
     db.commit()
     print(f"Seeded demo data. Log in with aman@zentriq.dev / {PASSWORD}")
