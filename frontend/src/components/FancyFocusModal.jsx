@@ -66,17 +66,14 @@ export default function FancyFocusModal({ isOpen, onClose }) {
   const focusList = data?.focus || [];
   const userName = user?.name ? user.name.split(' ')[0] : 'Aman';
 
-  // Queue references for sequential non-truncating audio playback
-  const speechQueueRef = useRef([]);
-  const keepAliveIntervalRef = useRef(null);
+  const hoverTimerRef = useRef(null);
 
-  // Stop all speech and clear queues safely
+  // Stop all active speech synthesis safely
   const stopAllSpeech = useCallback(() => {
-    if (keepAliveIntervalRef.current) {
-      clearInterval(keepAliveIntervalRef.current);
-      keepAliveIntervalRef.current = null;
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
-    speechQueueRef.current = [];
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -84,54 +81,8 @@ export default function FancyFocusModal({ isOpen, onClose }) {
     setCurrentSpeakingIndex(-1);
   }, []);
 
-  // Process next audio chunk in queue
-  const playNextQueueItem = useCallback((selectedVoice) => {
-    if (!('speechSynthesis' in window)) return;
-
-    if (speechQueueRef.current.length === 0) {
-      setIsSpeaking(false);
-      setCurrentSpeakingIndex(-1);
-      if (keepAliveIntervalRef.current) {
-        clearInterval(keepAliveIntervalRef.current);
-        keepAliveIntervalRef.current = null;
-      }
-      return;
-    }
-
-    const item = speechQueueRef.current.shift();
-    setCurrentSpeakingIndex(item.taskIndex);
-
-    const utterance = new SpeechSynthesisUtterance(item.text);
-    // Optimized female speech acoustics: clear, slightly elevated pitch, pleasant speed
-    utterance.rate = 0.98;
-    utterance.pitch = 1.12;
-    utterance.lang = 'en-US';
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-    };
-
-    utterance.onend = () => {
-      // Natural 180ms cadence between tasks
-      setTimeout(() => {
-        playNextQueueItem(selectedVoice);
-      }, 180);
-    };
-
-    utterance.onerror = (e) => {
-      console.warn('Speech playback notification:', e);
-      playNextQueueItem(selectedVoice);
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
-  // Speak complete focus briefing with ALL tasks without truncation
-  const speakFocusBriefing = useCallback((force = false) => {
+  // 1. Speak ONLY short, crisp Welcome greeting on modal open
+  const speakWelcomeGreeting = useCallback((force = false) => {
     if (!('speechSynthesis' in window)) return;
     if (speechMuted && !force) return;
 
@@ -144,67 +95,70 @@ export default function FancyFocusModal({ isOpen, onClose }) {
       setActiveVoiceName(`${cleanName} (Female)`);
     }
 
-    // Build complete conversational briefing script
-    const queue = [];
+    const greetingText = `Welcome ${userName} sir, here are today's tasks.`;
+    const utterance = new SpeechSynthesisUtterance(greetingText);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.15;
+    utterance.lang = 'en-US';
+    if (femaleVoice) utterance.voice = femaleVoice;
 
-    // 1. Warm Greeting & Headline
-    queue.push({
-      text: `Welcome ${userName} sir. Here is your complete focus briefing for today.`,
-      taskIndex: -1
-    });
+    setCurrentSpeakingIndex(-1);
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
 
-    if (focusList.length === 0) {
-      queue.push({
-        text: `All tasks and sprint deliverables are clear. No pending bottlenecks. Have a great day!`,
-        taskIndex: -1
-      });
-    } else {
-      // 2. Summary count
-      queue.push({
-        text: `You have ${focusList.length} priority items requiring your direct attention.`,
-        taskIndex: -1
-      });
+    window.speechSynthesis.speak(utterance);
+  }, [userName, speechMuted, stopAllSpeech]);
 
-      // 3. Complete, detailed announcement of EVERY task (no slicing, no skipping)
-      focusList.forEach((f, idx) => {
-        let taskSentence = `Task ${idx + 1}: ${f.title}`;
-        if (f.project) taskSentence += ` in project ${f.project}.`;
-        else taskSentence += `.`;
+  // 2. Speak concise details when user hovers on a specific task
+  const speakTaskOnHover = useCallback((f, idx) => {
+    if (!('speechSynthesis' in window) || speechMuted) return;
 
-        if (f.context) {
-          taskSentence += ` Details: ${f.context}.`;
-        }
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
 
-        queue.push({
-          text: taskSentence,
-          taskIndex: idx
-        });
-      });
+    hoverTimerRef.current = setTimeout(() => {
+      // Cancel previous utterance immediately
+      window.speechSynthesis.cancel();
 
-      // 4. Outro
-      queue.push({
-        text: `That concludes all your priority items for today. Zentriq is ready when you are.`,
-        taskIndex: -1
-      });
+      const voices = window.speechSynthesis.getVoices();
+      const femaleVoice = selectFemaleVoice(voices);
+
+      // Short, crisp summary of the hovered task
+      let speech = f.title;
+      if (f.project) speech += ` in ${f.project}.`;
+      if (f.context) speech += ` ${f.context}.`;
+
+      const utterance = new SpeechSynthesisUtterance(speech);
+      utterance.rate = 1.08; // Fast, responsive, snappy speech
+      utterance.pitch = 1.15; // Natural pleasant female pitch
+      utterance.lang = 'en-US';
+      if (femaleVoice) utterance.voice = femaleVoice;
+
+      setCurrentSpeakingIndex(idx);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setCurrentSpeakingIndex(-1);
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        setCurrentSpeakingIndex(-1);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }, 120); // 120ms debounce for smooth hovering
+  }, [speechMuted]);
+
+  const handleTaskHoverLeave = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
+  }, []);
 
-    speechQueueRef.current = queue;
-
-    // Chrome long-speech keep-alive heartbeat (prevents browser auto-pausing after 15s)
-    keepAliveIntervalRef.current = setInterval(() => {
-      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      }
-    }, 8000);
-
-    playNextQueueItem(femaleVoice);
-  }, [focusList, userName, speechMuted, stopAllSpeech, playNextQueueItem]);
-
-  // Trigger speech when modal opens
+  // Trigger only the welcome greeting when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Ensure voices are loaded
       if ('speechSynthesis' in window) {
         window.speechSynthesis.getVoices();
         window.speechSynthesis.onvoiceschanged = () => {
@@ -213,8 +167,8 @@ export default function FancyFocusModal({ isOpen, onClose }) {
       }
 
       const timer = setTimeout(() => {
-        speakFocusBriefing();
-      }, 300);
+        speakWelcomeGreeting();
+      }, 200);
 
       return () => {
         clearTimeout(timer);
@@ -223,7 +177,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
     } else {
       stopAllSpeech();
     }
-  }, [isOpen, speakFocusBriefing, stopAllSpeech]);
+  }, [isOpen, speakWelcomeGreeting, stopAllSpeech]);
 
   if (!isOpen) return null;
 
@@ -233,7 +187,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
       setSpeechMuted(true);
     } else {
       setSpeechMuted(false);
-      speakFocusBriefing(true);
+      speakWelcomeGreeting(true);
     }
   };
 
@@ -289,7 +243,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
           </div>
 
           <p className="text-xs text-emerald-100/90 leading-relaxed max-w-md">
-            Here are the critical priority tasks & decision bottlenecks requiring your attention today.
+            Hover over any task below to hear its live audio details, or click to review.
           </p>
 
           {/* Audio Visualizer Pill */}
@@ -305,8 +259,8 @@ export default function FancyFocusModal({ isOpen, onClose }) {
               <div className="text-xs">
                 <span className="font-semibold text-emerald-200 block leading-tight">
                   {isSpeaking
-                    ? (currentSpeakingIndex >= 0 ? `Announcing Task ${currentSpeakingIndex + 1} of ${focusList.length}...` : 'Starting Voice Briefing...')
-                    : 'Voice Briefing Ready'}
+                    ? (currentSpeakingIndex >= 0 ? `Reading: ${focusList[currentSpeakingIndex]?.title}` : 'Welcome Aman Sir!')
+                    : 'Hover over any task to listen'}
                 </span>
                 <span className="text-[10px] text-emerald-200/70">
                   {activeVoiceName} • Natural Audio
@@ -319,7 +273,7 @@ export default function FancyFocusModal({ isOpen, onClose }) {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition active:scale-95 shadow-xs"
             >
               {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
-              <span>{isSpeaking ? 'Mute Voice' : 'Replay Full Briefing'}</span>
+              <span>{isSpeaking ? 'Mute Voice' : 'Replay Welcome'}</span>
             </button>
           </div>
         </div>
@@ -344,6 +298,8 @@ export default function FancyFocusModal({ isOpen, onClose }) {
               return (
                 <div
                   key={f.id}
+                  onMouseEnter={() => speakTaskOnHover(f, idx)}
+                  onMouseLeave={handleTaskHoverLeave}
                   onClick={() => {
                     if (f.kind === 'decision') openDrawer('decision', f.ref);
                     else if (f.kind === 'moving') navigateToProjects(f.ref);
