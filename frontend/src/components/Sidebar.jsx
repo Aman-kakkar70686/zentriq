@@ -19,7 +19,7 @@ export default function Sidebar() {
   const {
     data, openDrawer, menuOpen, setMenuOpen,
     currentView, teamTab, teamExpanded, setTeamExpanded,
-    navigateToTeam, navigateToOverview,
+    navigateToProjects, navigateToTeam, navigateToOverview,
     navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,
     navigateToEvaluation, evaluationTab,
@@ -43,16 +43,14 @@ export default function Sidebar() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
-        <Item icon={Target} label="My Focus" count={data?.focus.length} onClick={() => openDrawer('focus')} />
-        <Item icon={Folder} label="Projects" count={data?.projects.length} onClick={() => openDrawer('projects')} />
-        <Item icon={CheckCircle2} label="Tasks" onClick={() => openDrawer('tasks')} />
-        <Item icon={Calendar} label="Meetings" onClick={() => openDrawer('meetings')} />
+        <Item icon={Target} label="My Focus" count={data?.focus?.length} onClick={() => openDrawer('focus')} />
         <Item
-          icon={Mail}
-          label="Email Center"
-          active={currentView === 'email-center'}
+          icon={Folder}
+          label="Projects"
+          count={data?.projects?.length}
+          active={currentView === 'projects'}
           onClick={() => {
-            navigateToEmailCenter();
+            navigateToProjects();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />

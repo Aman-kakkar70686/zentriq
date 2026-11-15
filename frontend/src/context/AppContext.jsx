@@ -15,9 +15,19 @@ export function AppProvider({ children }) {
   const [menuOpen, setMenuOpen] = useState(false); // mobile sidebar
 
   // Team workspace navigation
-  const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'team' | 'copilot' | 'prd-history' | 'email-center'
+  const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'projects' | 'team' | 'copilot' | 'prd-history' | 'email-center'
   const [teamTab, setTeamTab] = useState('overview'); // 'overview' | 'members' | 'workload' | 'github' | 'qa'
   const [teamExpanded, setTeamExpanded] = useState(false);
+
+  // Project workspace navigation
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+
+  const navigateToProjects = useCallback((projectId = null) => {
+    setSelectedProjectId(projectId);
+    setCurrentView('projects');
+    setDrawer(null);
+    setMenuOpen(false);
+  }, []);
 
   // Email & Notification Center state
   const [emailComposerOpen, setEmailComposerOpen] = useState(false);
@@ -159,6 +169,7 @@ export function AppProvider({ children }) {
     data, error, reload, drawer, openDrawer, closeDrawer, toast, toastMsg, paletteOpen, setPaletteOpen,
     createType, setCreateType, fabOpen, setFabOpen, menuOpen, setMenuOpen,
     currentView, setCurrentView, teamTab, setTeamTab, teamExpanded, setTeamExpanded,
+    selectedProjectId, setSelectedProjectId, navigateToProjects,
     navigateToTeam, navigateToOverview,
     aiExpanded, setAiExpanded, activePrd, setActivePrd, navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,

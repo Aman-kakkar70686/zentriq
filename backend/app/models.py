@@ -35,6 +35,8 @@ class Project(Base):
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="active")
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    proposal_doc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    srs_doc: Mapped[str | None] = mapped_column(Text, nullable=True)
     tasks: Mapped[list["Task"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
@@ -77,6 +79,9 @@ class TeamMember(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     role: Mapped[str] = mapped_column(String(60), default="Member")
+
+    user: Mapped[User] = relationship(foreign_keys=[user_id])
+    project: Mapped[Project] = relationship(foreign_keys=[project_id])
 
 
 class Comment(Base):

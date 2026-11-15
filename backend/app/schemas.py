@@ -35,6 +35,21 @@ class ProjectIn(BaseModel):
     end_date: date | None = None
 
 
+class ProjectUpdateIn(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    proposal_doc: str | None = None
+    srs_doc: str | None = None
+
+
+class ProjectMemberIn(BaseModel):
+    user_id: int
+    role: str = "Member"
+
+
 class TaskIn(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None

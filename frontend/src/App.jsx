@@ -2,6 +2,7 @@ import { useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 import Login from './pages/Login';
 import Overview from './pages/Overview';
+import ProjectWorkspace from './pages/ProjectWorkspace';
 import TeamWorkspace from './pages/TeamWorkspace';
 import AIPMCopilot from './pages/AIPMCopilot';
 import PRDHistory from './pages/PRDHistory';
@@ -16,7 +17,9 @@ function WorkspaceRouter() {
   const { currentView, emailComposerOpen, emailComposerData, closeEmailComposer, activeMeetingRoom, closeInAppMeeting, toast } = useApp();
   
   let content = <Overview />;
-  if (currentView === 'team') {
+  if (currentView === 'projects') {
+    content = <ProjectWorkspace />;
+  } else if (currentView === 'team') {
     content = <TeamWorkspace />;
   } else if (currentView === 'copilot') {
     content = <AIPMCopilot />;

@@ -6,7 +6,7 @@ export default function CommandPalette() {
   const {
     paletteOpen, setPaletteOpen, openDrawer, setCreateType, data,
     navigateToCopilot, navigateToPrdHistory, navigateToRequirementIntelligence,
-    navigateToEmailCenter, openEmailComposer
+    navigateToEmailCenter, openEmailComposer, navigateToProjects
   } = useApp();
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
@@ -15,6 +15,7 @@ export default function CommandPalette() {
   useEffect(() => { if (paletteOpen) { setQ(''); setSel(0); api.get('/tasks').then((r) => setTasks(r.data)).catch(() => {}); } }, [paletteOpen]);
 
   const cmds = useMemo(() => [
+    { l: 'Project Workspace', h: 'Workspace', run: () => (navigateToProjects ? navigateToProjects() : openDrawer('projects')) },
     { l: 'AI PM Copilot', h: 'AI Workspace', run: () => navigateToCopilot() },
     { l: 'Requirement Intelligence', h: 'AI Workspace', run: () => navigateToRequirementIntelligence() },
     { l: 'Analyse PRD Requirements', h: 'AI Quality', run: () => navigateToRequirementIntelligence() },
@@ -22,12 +23,12 @@ export default function CommandPalette() {
     { l: 'Generate PRD with Gemini', h: 'AI Action', run: () => navigateToCopilot() },
     { l: 'Email & Notification Center', h: 'Communication', run: () => navigateToEmailCenter() },
     { l: 'Compose Email', h: 'Action', run: () => openEmailComposer() },
-    ...[['Overview', null], ['My Focus', 'focus'], ['Decision Center', 'decisions'], ['Deadline Radar', 'deadlines'], ['Team capacity', 'team'], ['Meetings', 'meetings'], ['Analytics', 'analytics'], ['Email Center', 'email-center']]
-      .map(([l, v]) => ({ l, h: 'Go to', run: () => (v === 'email-center' ? navigateToEmailCenter() : v ? openDrawer(v) : window.scrollTo({ top: 0, behavior: 'smooth' })) })),
-    ...(data?.projects || []).map((p) => ({ l: p.name, h: 'Project', run: () => openDrawer('project', p.id) })),
+    ...[['Overview', null], ['My Focus', 'focus'], ['Decision Center', 'decisions'], ['Deadline Radar', 'deadlines'], ['Team capacity', 'team'], ['Analytics', 'analytics']]
+      .map(([l, v]) => ({ l, h: 'Go to', run: () => (v ? openDrawer(v) : window.scrollTo({ top: 0, behavior: 'smooth' })) })),
+    ...(data?.projects || []).map((p) => ({ l: p.name, h: 'Project', run: () => (navigateToProjects ? navigateToProjects(p.id) : openDrawer('project', p.id)) })),
     ...[['project', 'New Project'], ['task', 'New Task'], ['decision', 'New Decision'], ['meeting', 'Schedule Meeting']].map(([k, l]) => ({ l, h: 'Create', run: () => setCreateType(k) })),
     ...tasks.map((t) => ({ l: t.title, h: 'Task', run: () => openDrawer('task', t.id) })),
-  ], [data, tasks, navigateToCopilot, navigateToPrdHistory, navigateToRequirementIntelligence]);
+  ], [data, tasks, navigateToCopilot, navigateToPrdHistory, navigateToRequirementIntelligence, navigateToProjects]);
 
   if (!paletteOpen) return null;
   const list = cmds.filter((c) => c.l.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
