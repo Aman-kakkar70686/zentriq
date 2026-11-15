@@ -245,7 +245,7 @@ export default function ProjectWorkspace() {
   return (
     <div className="min-h-screen bg-bg text-ink flex">
       <Sidebar />
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-0' : 'lg:pl-60'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${(activeTab === 'roadmap' && sidebarCollapsed) ? 'lg:pl-0' : 'lg:pl-60'}`}>
         <TopBar />
         
         <main className={`flex-1 px-4 sm:px-6 lg:px-8 py-6 w-full mx-auto animate-in fade-in duration-150 ${activeTab === 'roadmap' ? 'max-w-none' : 'max-w-7xl'}`}>
@@ -556,16 +556,18 @@ export default function ProjectWorkspace() {
                     <span>← Back to All Projects</span>
                   </button>
 
-                  {/* Toggle Sidebar Full Screen Button */}
-                  <button
-                    type="button"
-                    onClick={toggleSidebar}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-line bg-card hover:bg-card2 text-ink2 hover:text-ink transition shadow-xs"
-                    title={sidebarCollapsed ? "Show sidebar options" : "Hide sidebar for wide screen"}
-                  >
-                    {sidebarCollapsed ? <ChevronRight size={14} className="text-brand" /> : <ChevronLeft size={14} />}
-                    <span>{sidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar (Full Canvas)'}</span>
-                  </button>
+                  {/* Toggle Sidebar Full Screen Button (Only inside Roadmap) */}
+                  {activeTab === 'roadmap' && (
+                    <button
+                      type="button"
+                      onClick={toggleSidebar}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-line bg-card hover:bg-card2 text-ink2 hover:text-ink transition shadow-xs"
+                      title={sidebarCollapsed ? "Show sidebar options" : "Hide sidebar for wide screen"}
+                    >
+                      {sidebarCollapsed ? <ChevronRight size={14} className="text-brand" /> : <ChevronLeft size={14} />}
+                      <span>{sidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar (Full Canvas)'}</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -579,64 +581,47 @@ export default function ProjectWorkspace() {
                 </div>
               </div>
 
-              {/* Project Hero Summary Card */}
-              <div className="bg-card border border-line rounded-2xl p-6 shadow-xs space-y-5">
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  <div className="space-y-2 max-w-2xl">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-2xl font-bold tracking-tight text-ink">{selectedProject.name}</h2>
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-brand/10 border-brand/20 text-brand">
+              {/* Ultra-compact Project Header Bar */}
+              <div className="bg-card border border-line rounded-xl px-4 py-2.5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand grid place-items-center shrink-0">
+                    <Folder size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold tracking-tight text-ink truncate">{selectedProject.name}</h2>
+                      <span className="px-2 py-0.2 rounded-full text-[10px] font-bold border bg-brand/10 border-brand/20 text-brand shrink-0">
                         {selectedProject.status?.toUpperCase() || 'ACTIVE'}
                       </span>
                     </div>
-                    <p className="text-sm text-ink2 leading-relaxed">
-                      {selectedProject.description || 'Enterprise project workspace. Manage documentation, functional requirements, sprints, and team velocity.'}
+                    <p className="text-xs text-mute truncate max-w-md hidden sm:block">
+                      {selectedProject.description || 'Project deliverables & timeline'}
                     </p>
-                  </div>
-
-                  {/* Progress Ring / Bar Indicator */}
-                  <div className="p-3.5 bg-card2 border border-line rounded-xl min-w-[180px] text-right space-y-1">
-                    <div className="text-[11px] font-semibold text-mute uppercase tracking-wider">PROJECT PROGRESS</div>
-                    <div className="text-2xl font-bold text-brand">{selectedProject.progress}%</div>
-                    <div className="text-xs text-ink2">
-                      {selectedProject.shipped_tasks} of {selectedProject.tasks} tasks completed
-                    </div>
                   </div>
                 </div>
 
-                {/* Metadata Row: Dates, Team Count, Docs */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-line text-xs">
-                  <div>
-                    <span className="text-mute block font-medium">Start Date</span>
-                    <span className="font-semibold text-ink mt-0.5 block">
-                      {selectedProject.start_date ? fmtDate(selectedProject.start_date) : 'Not specified'}
-                    </span>
+                {/* Compact Right Metadata & Progress */}
+                <div className="flex items-center gap-4 text-xs shrink-0 self-end md:self-auto">
+                  {selectedProject.end_date && (
+                    <div className="hidden sm:flex items-center gap-1 text-ink2">
+                      <Calendar size={12} className="text-mute" />
+                      <span>Due {fmtDate(selectedProject.end_date)}</span>
+                    </div>
+                  )}
+
+                  <div className="hidden md:flex items-center gap-1 text-ink2">
+                    <Users size={12} className="text-mute" />
+                    <span>{selectedProject.members?.length || 0} Members</span>
                   </div>
 
-                  <div>
-                    <span className="text-mute block font-medium">Target Deadline</span>
-                    <span className="font-semibold text-ink mt-0.5 block">
-                      {selectedProject.end_date ? fmtDate(selectedProject.end_date) : 'Ongoing'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-mute block font-medium">Team Members</span>
-                    <span className="font-semibold text-ink mt-0.5 block">
-                      {selectedProject.members?.length || 0} Assigned Employees
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-mute block font-medium">Roadmap & Specs</span>
-                    <span className="font-semibold text-brand mt-0.5 block truncate">
-                      {selectedProject.roadmap_tree ? 'Tree Roadmap' : ''}
-                      {selectedProject.roadmap_tree && (selectedProject.has_proposal || selectedProject.has_srs) ? ' · ' : ''}
-                      {selectedProject.has_proposal ? 'Proposal' : ''}
-                      {selectedProject.has_proposal && selectedProject.has_srs ? ' & ' : ''}
-                      {selectedProject.has_srs ? 'SRS' : ''}
-                      {!selectedProject.roadmap_tree && !selectedProject.has_proposal && !selectedProject.has_srs ? 'Drafting...' : ''}
-                    </span>
+                  <div className="flex items-center gap-2 pl-3 border-l border-line">
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-mute block leading-none">PROGRESS</span>
+                      <span className="text-xs font-extrabold text-brand">{selectedProject.progress}%</span>
+                    </div>
+                    <div className="w-14 h-1.5 bg-card2 border border-line/60 rounded-full overflow-hidden">
+                      <div className="h-full bg-brand rounded-full transition-all" style={{ width: `${selectedProject.progress}%` }} />
+                    </div>
                   </div>
                 </div>
               </div>

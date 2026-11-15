@@ -21,7 +21,7 @@ import TopBar from '../components/TopBar';
 import { TeamsIcon } from '../components/ui';
 
 export default function Overview() {
-  const { data, error, reload, setCreateType, toast, openInAppMeeting, sidebarCollapsed } = useApp();
+  const { data, error, reload, setCreateType, toast, openInAppMeeting } = useApp();
   const { user, logout } = useAuth();
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [stopModalOpen, setStopModalOpen] = useState(false);
@@ -29,7 +29,7 @@ export default function Overview() {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-60'}`}>
+      <div className="transition-all duration-300 lg:ml-60">
         <TopBar />
         <main className="max-w-[1240px] px-4 lg:px-10 pt-9 pb-24">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">

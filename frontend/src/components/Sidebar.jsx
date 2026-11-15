@@ -25,15 +25,20 @@ export default function Sidebar() {
     navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,
     navigateToEvaluation, evaluationTab,
-    navigateToEmailCenter
+    navigateToEmailCenter,
+    openFocusModal
   } = useApp();
   const { user } = useAuth();
   const initials = (user?.name || 'U').split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase();
 
+  // Sidebar collapse is strictly active ONLY inside the Roadmap view
+  const isRoadmapView = currentView === 'projects' && projectWorkspaceTab === 'roadmap';
+  const effectiveCollapsed = isRoadmapView && sidebarCollapsed;
+
   return (
     <>
-      {/* Floating Arrow Tab to slide the sidebar back onto the screen */}
-      {sidebarCollapsed && (
+      {/* Floating Arrow Tab to slide the sidebar back onto the screen (Roadmap only) */}
+      {effectiveCollapsed && (
         <button
           type="button"
           onClick={() => setSidebarCollapsed(false)}
@@ -47,19 +52,21 @@ export default function Sidebar() {
 
       {menuOpen && <div className="fixed inset-0 bg-ink/30 z-30 lg:hidden" onClick={() => setMenuOpen(false)} />}
       <aside className={`fixed inset-y-0 left-0 w-60 bg-side z-40 flex flex-col px-2.5 pt-4 pb-2 overflow-y-auto transition-transform duration-300 ease-in-out shadow-2xl ${
-        sidebarCollapsed ? '-translate-x-full' : (menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
+        effectiveCollapsed ? '-translate-x-full' : (menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
       }`}>
         <div className="flex items-center justify-between px-2 pb-2">
           <div className="flex items-center gap-2.5 text-[#F7F6F2] font-bold text-base tracking-tight"><Logo /> Zentriq</div>
-          {/* Arrow button to slide sidebar out of the screen */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed(true)}
-            className="p-1.5 rounded-lg text-[#8E9488] hover:text-[#F7F6F2] hover:bg-white/10 transition"
-            title="Collapse sidebar (Expand to full-screen)"
-          >
-            <ChevronLeft size={16} />
-          </button>
+          {/* Arrow button to slide sidebar out of the screen (ONLY inside Roadmap view) */}
+          {isRoadmapView && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(true)}
+              className="p-1.5 rounded-lg text-[#8E9488] hover:text-[#F7F6F2] hover:bg-white/10 transition"
+              title="Collapse sidebar for full-screen roadmap"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
         </div>
         <Group>Workspace</Group>
         <Item
@@ -71,7 +78,7 @@ export default function Sidebar() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
-        <Item icon={Target} label="My Focus" count={data?.focus?.length} onClick={() => openDrawer('focus')} />
+        <Item icon={Target} label="My Focus" count={data?.focus?.length} onClick={() => openFocusModal()} />
         <Item
           icon={Folder}
           label="Projects"

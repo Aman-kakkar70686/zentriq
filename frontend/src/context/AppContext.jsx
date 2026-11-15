@@ -108,7 +108,20 @@ export function AppProvider({ children }) {
     setTimeout(() => setToastMsg(''), 2400);
   }, []);
 
-  const openDrawer = (type, id = null) => { setMenuOpen(false); setDrawer({ type, id }); };
+  // Focus Pop Modal state
+  const [focusModalOpen, setFocusModalOpen] = useState(false);
+  const openFocusModal = useCallback(() => setFocusModalOpen(true), []);
+  const closeFocusModal = useCallback(() => setFocusModalOpen(false), []);
+
+  const openDrawer = (type, id = null) => {
+    if (type === 'focus') {
+      setMenuOpen(false);
+      setFocusModalOpen(true);
+      return;
+    }
+    setMenuOpen(false);
+    setDrawer({ type, id });
+  };
   const closeDrawer = () => setDrawer(null);
 
   const navigateToTeam = useCallback((tab = 'overview') => {
@@ -185,7 +198,8 @@ export function AppProvider({ children }) {
     navigateToRequirementIntelligence, navigateToStoryQA,
     evaluationTab, setEvaluationTab, navigateToEvaluation,
     emailComposerOpen, emailComposerData, openEmailComposer, closeEmailComposer, navigateToEmailCenter,
-    activeMeetingRoom, openInAppMeeting, closeInAppMeeting
+    activeMeetingRoom, openInAppMeeting, closeInAppMeeting,
+    focusModalOpen, openFocusModal, closeFocusModal
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

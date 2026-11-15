@@ -12,9 +12,16 @@ import AIEvaluationStudio from './pages/AIEvaluationStudio';
 import EmailCenter from './pages/EmailCenter';
 import EmailComposerModal from './components/email/EmailComposerModal';
 import InAppMeetingModal from './components/InAppMeetingModal';
+import FancyFocusModal from './components/FancyFocusModal';
 
 function WorkspaceRouter() {
-  const { currentView, emailComposerOpen, emailComposerData, closeEmailComposer, activeMeetingRoom, closeInAppMeeting, toast } = useApp();
+  const {
+    currentView,
+    emailComposerOpen, emailComposerData, closeEmailComposer,
+    activeMeetingRoom, closeInAppMeeting,
+    toast,
+    focusModalOpen, closeFocusModal
+  } = useApp();
   
   let content = <Overview />;
   if (currentView === 'projects') {
@@ -51,6 +58,10 @@ function WorkspaceRouter() {
           toast={toast}
         />
       )}
+      <FancyFocusModal
+        isOpen={focusModalOpen}
+        onClose={closeFocusModal}
+      />
     </>
   );
 }
