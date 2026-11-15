@@ -13,6 +13,7 @@ import QuickCreate from '../components/QuickCreate';
 import Drawer from '../components/Drawer';
 import CommandPalette from '../components/CommandPalette';
 import TreeRoadmap from '../components/roadmap/TreeRoadmap';
+import HorizontalSprintRoadmap from '../components/roadmap/HorizontalSprintRoadmap';
 import { Btn, Dot } from '../components/ui';
 import { fmtDate, timeAgo } from '../lib/format';
 
@@ -667,114 +668,21 @@ export default function ProjectWorkspace() {
                 ))}
               </div>
 
-              {/* TAB 0: CUSTOM TREE ROADMAP */}
+              {/* TAB 0: ROADMAP & ORGANIC TREE */}
               {activeTab === 'roadmap' && (
                 <TreeRoadmap
                   project={selectedProject}
                   onUpdateProject={(updated) => setSelectedProject(updated)}
+                  onRefreshProject={() => fetchProjectDetail(selectedProject.id)}
                 />
               )}
 
-              {/* TAB 1: SPRINTS & TASKS BREAKDOWN */}
+              {/* TAB 1: SPRINTS & TASKS (HORIZONTAL DRAG & DROP PIPELINE) */}
               {activeTab === 'sprints' && (
-                <div className="space-y-6">
-                  {/* Sprint Stage Pipeline Summary */}
-                  <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
-                    {Object.entries(selectedProject.stage_counts || {}).map(([stg, count]) => (
-                      <div key={stg} className="p-3 bg-card border border-line rounded-xl text-center">
-                        <span className="text-[11px] font-semibold text-mute uppercase">{stg}</span>
-                        <span className="text-lg font-bold text-ink block mt-0.5">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Task List */}
-                  <div className="bg-card border border-line rounded-xl p-5 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Layers size={16} className="text-brand" />
-                        <h3 className="text-sm font-semibold text-ink">Project Tasks & Sprints</h3>
-                      </div>
-                      <span className="text-xs text-ink2">
-                        {selectedProject.task_list?.length || 0} total tasks
-                      </span>
-                    </div>
-
-                    {selectedProject.task_list?.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-ink2">
-                        No tasks created for this project yet. Click "+ New Task" above to add one.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {selectedProject.task_list?.map((t) => (
-                          <div
-                            key={t.id}
-                            className="p-3.5 rounded-xl border border-line bg-card2 hover:bg-card hover:border-brand/30 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
-                          >
-                            <div className="space-y-1 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-ink text-[13px]">{t.title}</span>
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                    t.priority === 'high'
-                                      ? 'bg-red-50 text-red-700 border border-red-200'
-                                      : t.priority === 'medium'
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                      : 'bg-blue-50 text-blue-700 border border-blue-200'
-                                  }`}
-                                >
-                                  {t.priority}
-                                </span>
-                                <span className="px-2 py-0.5 rounded bg-white border border-line text-[10.5px] font-medium text-ink2">
-                                  {t.status?.toUpperCase()}
-                                </span>
-                              </div>
-                              {t.description && <p className="text-ink2 line-clamp-1">{t.description}</p>}
-                            </div>
-
-                            {/* Assignee & Actions */}
-                            <div className="flex items-center gap-3 shrink-0">
-                              <div className="text-right">
-                                <span className="font-medium text-ink block">{t.assignee || 'Unassigned'}</span>
-                                <span className="text-[11px] text-mute">{t.due_date ? `Due ${fmtDate(t.due_date)}` : 'No date'}</span>
-                              </div>
-
-                              {t.status !== 'shipped' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleAdvanceTask(t.id, t.status)}
-                                  className="px-2.5 py-1 rounded bg-card hover:bg-hov border border-line text-ink font-medium text-[11px] transition shadow-xs"
-                                  title="Advance task to next stage"
-                                >
-                                  Advance →
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  openEmailComposer({
-                                    to: t.assignee_email ? [t.assignee_email] : [],
-                                    subject: `Regarding Task: ${t.title}`,
-                                    message: `Hi ${t.assignee || 'team'},\n\nFollowing up on task "${t.title}" in project ${selectedProject.name}.\n\nPriority: ${t.priority}\nStatus: ${t.status}\n`,
-                                    projectId: selectedProject.id,
-                                    relatedTaskId: t.id,
-                                    contextTitle: `Project: ${selectedProject.name} (Task: ${t.title})`,
-                                    emailType: 'direct',
-                                  });
-                                }}
-                                className="p-1.5 rounded-lg border border-line bg-card hover:bg-hov text-ink2 hover:text-brand transition"
-                                title="Email assignee"
-                              >
-                                <Mail size={13} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <HorizontalSprintRoadmap
+                  project={selectedProject}
+                  onRefreshProject={() => fetchProjectDetail(selectedProject.id)}
+                />
               )}
 
               {/* TAB 2: PROJECT DOCUMENTS & SPECS (PROPOSAL, SRS, PRDS) */}
