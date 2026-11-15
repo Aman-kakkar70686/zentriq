@@ -19,6 +19,7 @@ export default function Sidebar() {
   const {
     data, openDrawer, menuOpen, setMenuOpen,
     currentView, teamTab, teamExpanded, setTeamExpanded,
+    selectedProjectId, projectWorkspaceTab,
     navigateToProjects, navigateToTeam, navigateToOverview,
     navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,
@@ -48,9 +49,9 @@ export default function Sidebar() {
           icon={Folder}
           label="Projects"
           count={data?.projects?.length}
-          active={currentView === 'projects'}
+          active={currentView === 'projects' && projectWorkspaceTab !== 'roadmap'}
           onClick={() => {
-            navigateToProjects();
+            navigateToProjects(null, 'sprints');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
@@ -114,7 +115,16 @@ export default function Sidebar() {
           )}
         </div>
 
-        <Item icon={Route} label="Roadmap" onClick={() => openDrawer('deadlines')} />
+        <Item
+          icon={Route}
+          label="Roadmap"
+          active={currentView === 'projects' && projectWorkspaceTab === 'roadmap'}
+          onClick={() => {
+            const targetId = selectedProjectId || (data?.projects?.[0]?.id || 1);
+            navigateToProjects(targetId, 'roadmap');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
         <Item icon={BarChart3} label="Analytics" onClick={() => openDrawer('analytics')} />
         
         <Group>AI Workspace</Group>

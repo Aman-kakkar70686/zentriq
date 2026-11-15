@@ -21,9 +21,11 @@ export function AppProvider({ children }) {
 
   // Project workspace navigation
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projectWorkspaceTab, setProjectWorkspaceTab] = useState('roadmap');
 
-  const navigateToProjects = useCallback((projectId = null) => {
+  const navigateToProjects = useCallback((projectId = null, tab = null) => {
     setSelectedProjectId(projectId);
+    if (tab) setProjectWorkspaceTab(tab);
     setCurrentView('projects');
     setDrawer(null);
     setMenuOpen(false);
@@ -170,6 +172,7 @@ export function AppProvider({ children }) {
     createType, setCreateType, fabOpen, setFabOpen, menuOpen, setMenuOpen,
     currentView, setCurrentView, teamTab, setTeamTab, teamExpanded, setTeamExpanded,
     selectedProjectId, setSelectedProjectId, navigateToProjects,
+    projectWorkspaceTab, setProjectWorkspaceTab,
     navigateToTeam, navigateToOverview,
     aiExpanded, setAiExpanded, activePrd, setActivePrd, navigateToCopilot, navigateToPrdHistory,
     navigateToRequirementIntelligence, navigateToStoryQA,

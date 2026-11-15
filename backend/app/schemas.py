@@ -43,6 +43,7 @@ class ProjectUpdateIn(BaseModel):
     end_date: date | None = None
     proposal_doc: str | None = None
     srs_doc: str | None = None
+    roadmap_tree: dict | list | None = None
 
 
 class ProjectMemberIn(BaseModel):

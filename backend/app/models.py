@@ -37,6 +37,7 @@ class Project(Base):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     proposal_doc: Mapped[str | None] = mapped_column(Text, nullable=True)
     srs_doc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    roadmap_tree: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     tasks: Mapped[list["Task"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 

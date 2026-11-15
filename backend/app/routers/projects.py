@@ -1,16 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from ..database import get_db
-from ..deps import current_user
-from ..models import Project, TeamMember, User
-from ..schemas import ProjectIn
-from ..services import log_activity
-
-router = APIRouter(prefix="/projects", tags=["projects"], dependencies=[Depends(current_user)])
-
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -71,7 +58,9 @@ def format_project(p: Project, db: Session, detailed: bool = False) -> dict:
         "members_count": len(members),
         "has_proposal": bool(p.proposal_doc),
         "has_srs": bool(p.srs_doc),
+        "has_roadmap": bool(p.roadmap_tree),
         "stage_counts": stage_counts,
+        "roadmap_tree": p.roadmap_tree,
     }
 
     if detailed:
@@ -134,6 +123,36 @@ def update_project(project_id: int, body: ProjectUpdateIn, db: Session = Depends
     db.commit()
     db.refresh(p)
     return format_project(p, db, detailed=True)
+
+
+@router.get("/{project_id}/roadmap")
+def get_project_roadmap(project_id: int, db: Session = Depends(get_db)):
+    p = db.get(Project, project_id)
+    if not p:
+        raise HTTPException(404, "Project not found")
+    return {
+        "project_id": p.id,
+        "project_name": p.name,
+        "roadmap_tree": p.roadmap_tree,
+    }
+
+
+@router.put("/{project_id}/roadmap")
+def save_project_roadmap(project_id: int, body: dict, db: Session = Depends(get_db), me: User = Depends(current_user)):
+    p = db.get(Project, project_id)
+    if not p:
+        raise HTTPException(404, "Project not found")
+
+    p.roadmap_tree = body.get("roadmap_tree", body)
+    log_activity(db, kind="moved", action="updated tree roadmap", subject=p.name, user_id=me.id, project_id=p.id)
+    db.commit()
+    db.refresh(p)
+    return {
+        "ok": True,
+        "project_id": p.id,
+        "roadmap_tree": p.roadmap_tree,
+        "message": "Custom tree roadmap saved successfully!",
+    }
 
 
 @router.post("/{project_id}/members", status_code=status.HTTP_201_CREATED)

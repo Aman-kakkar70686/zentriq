@@ -3,7 +3,7 @@ import {
   Folder, Users, Calendar, Clock, CheckCircle2, AlertCircle, Sparkles,
   ArrowLeft, Search, Plus, ExternalLink, FileText, Download, Edit3, Check,
   X, ChevronRight, Mail, Layers, ShieldCheck, ArrowUpRight, BarChart2,
-  AlertTriangle, RefreshCw, Send, BookOpen
+  AlertTriangle, RefreshCw, Send, BookOpen, GitBranch
 } from 'lucide-react';
 import api, { errMsg } from '../api/client';
 import { useApp } from '../context/AppContext';
@@ -12,19 +12,21 @@ import Sidebar from '../components/Sidebar';
 import QuickCreate from '../components/QuickCreate';
 import Drawer from '../components/Drawer';
 import CommandPalette from '../components/CommandPalette';
+import TreeRoadmap from '../components/roadmap/TreeRoadmap';
 import { Btn, Dot } from '../components/ui';
 import { fmtDate, timeAgo } from '../lib/format';
 
 export default function ProjectWorkspace() {
   const {
     data, reload, selectedProjectId, setSelectedProjectId,
+    projectWorkspaceTab, setProjectWorkspaceTab,
     setCreateType, openEmailComposer, toast
   } = useApp();
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activeTab, setActiveTab] = useState('sprints'); // 'sprints' | 'docs' | 'team' | 'settings'
+  const [activeTab, setActiveTab] = useState(projectWorkspaceTab || 'roadmap'); // 'roadmap' | 'sprints' | 'docs' | 'team' | 'settings'
   const [docSubTab, setDocSubTab] = useState('proposal'); // 'proposal' | 'srs' | 'prds'
   
   // Search & Filter
@@ -94,6 +96,13 @@ export default function ProjectWorkspace() {
       setSelectedProject(null);
     }
   }, [selectedProjectId]);
+
+  // Sync activeTab with projectWorkspaceTab from context
+  useEffect(() => {
+    if (projectWorkspaceTab) {
+      setActiveTab(projectWorkspaceTab);
+    }
+  }, [projectWorkspaceTab]);
 
   // Handle doc subtab sync
   useEffect(() => {
@@ -410,7 +419,19 @@ export default function ProjectWorkspace() {
                           </div>
 
                           {/* Documentation Indicators */}
-                          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-line/60 text-[11px]">
+                          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-line/60 text-[11px] flex-wrap">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border ${
+                                p.has_roadmap
+                                  ? 'bg-[#DCE9DF]/50 border-[#174B3A]/20 text-[#174B3A]'
+                                  : 'bg-card2 border-line text-mute'
+                              }`}
+                            >
+                              <GitBranch size={11} />
+                              <span>Tree Roadmap</span>
+                              {p.has_roadmap && <Check size={10} className="text-brand font-bold" />}
+                            </span>
+
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border ${
                                 p.has_proposal
@@ -478,10 +499,25 @@ export default function ProjectWorkspace() {
                             <span>{p.end_date ? `Due ${fmtDate(p.end_date)}` : 'No deadline'}</span>
                           </div>
 
-                          <span className="text-brand font-semibold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                            <span>Open Details</span>
-                            <ChevronRight size={14} />
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProjectId(p.id);
+                                if (setProjectWorkspaceTab) setProjectWorkspaceTab('roadmap');
+                                setActiveTab('roadmap');
+                              }}
+                              className="text-xs font-semibold text-brand hover:text-emerald-700 inline-flex items-center gap-1 transition"
+                            >
+                              <GitBranch size={13} />
+                              <span>Roadmap</span>
+                            </button>
+                            <span className="text-brand font-semibold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                              <span>Open</span>
+                              <ChevronRight size={14} />
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -566,20 +602,23 @@ export default function ProjectWorkspace() {
                   </div>
 
                   <div>
-                    <span className="text-mute block font-medium">Documentation</span>
-                    <span className="font-semibold text-brand mt-0.5 block">
+                    <span className="text-mute block font-medium">Roadmap & Specs</span>
+                    <span className="font-semibold text-brand mt-0.5 block truncate">
+                      {selectedProject.roadmap_tree ? 'Tree Roadmap' : ''}
+                      {selectedProject.roadmap_tree && (selectedProject.has_proposal || selectedProject.has_srs) ? ' · ' : ''}
                       {selectedProject.has_proposal ? 'Proposal' : ''}
                       {selectedProject.has_proposal && selectedProject.has_srs ? ' & ' : ''}
-                      {selectedProject.has_srs ? 'SRS Spec' : ''}
-                      {!selectedProject.has_proposal && !selectedProject.has_srs ? 'Drafting...' : ''}
+                      {selectedProject.has_srs ? 'SRS' : ''}
+                      {!selectedProject.roadmap_tree && !selectedProject.has_proposal && !selectedProject.has_srs ? 'Drafting...' : ''}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Workspace Navigation Tabs */}
-              <div className="flex items-center gap-2 border-b border-line pb-px">
+              <div className="flex items-center gap-2 border-b border-line pb-px overflow-x-auto">
                 {[
+                  ['roadmap', 'Custom Tree Roadmap', GitBranch],
                   ['sprints', 'Sprints & Tasks', Layers],
                   ['docs', 'Project Documents (Proposal & SRS)', FileText],
                   ['team', 'Assigned Team Members', Users],
@@ -587,8 +626,11 @@ export default function ProjectWorkspace() {
                 ].map(([key, label, Icon]) => (
                   <button
                     key={key}
-                    onClick={() => setActiveTab(key)}
-                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition -mb-px ${
+                    onClick={() => {
+                      setActiveTab(key);
+                      if (setProjectWorkspaceTab) setProjectWorkspaceTab(key);
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition -mb-px whitespace-nowrap ${
                       activeTab === key
                         ? 'border-brand text-brand bg-card'
                         : 'border-transparent text-ink2 hover:text-ink hover:bg-card2/60'
@@ -599,6 +641,14 @@ export default function ProjectWorkspace() {
                   </button>
                 ))}
               </div>
+
+              {/* TAB 0: CUSTOM TREE ROADMAP */}
+              {activeTab === 'roadmap' && (
+                <TreeRoadmap
+                  project={selectedProject}
+                  onUpdateProject={(updated) => setSelectedProject(updated)}
+                />
+              )}
 
               {/* TAB 1: SPRINTS & TASKS BREAKDOWN */}
               {activeTab === 'sprints' && (
@@ -1012,3 +1062,4 @@ export default function ProjectWorkspace() {
     </div>
   );
 }
+
