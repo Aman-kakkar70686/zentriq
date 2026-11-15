@@ -186,9 +186,31 @@ export default function OrganicTreeRoadmap({ project, onRefreshProject }) {
     if (toast) toast('Feature attached to new tree branch!');
   };
 
+  // Move feature to another limb/phase
+  const handleMoveToLimb = (featureId, newLimbId, e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setTreeFeatures(prev =>
+      prev.map(f => f.id === featureId ? { ...f, limbId: newLimbId } : f)
+    );
+    const targetLimb = BASE_BRANCHES.find(b => b.id === newLimbId);
+    if (toast) toast(`Moved to ${targetLimb?.pillar || 'new branch'}!`);
+  };
+
+  // Directly set feature stage
+  const handleSetFeatureStage = (featureId, newStatus, e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setTreeFeatures(prev =>
+      prev.map(f => f.id === featureId ? { ...f, status: newStatus } : f)
+    );
+    if (toast) toast(`Stage set to ${newStatus.toUpperCase()}`);
+  };
+
   // Cycle feature stage on 1-click
   const handleCycleStage = (featureId, e) => {
-    e.stopPropagation();
+    e?.preventDefault();
+    e?.stopPropagation();
     const cycle = { ideas: 'planned', planned: 'building', building: 'review', review: 'ready', ready: 'shipped', shipped: 'ideas' };
     setTreeFeatures(prev =>
       prev.map(f => f.id === featureId ? { ...f, status: cycle[f.status] || 'planned' } : f)
@@ -436,16 +458,19 @@ export default function OrganicTreeRoadmap({ project, onRefreshProject }) {
                 onDrop={(e) => handleLimbDrop(e, limb.id)}
                 className="absolute z-20"
                 style={{
-                  left: `${limb.anchor.x - 70}px`,
-                  top: `${Math.max(20, limb.anchor.y - (limbFeatures.length * 36) - 20)}px`
+                  left: `${Math.max(10, Math.min(840, limb.anchor.x - 85))}px`,
+                  top: `${Math.max(15, limb.anchor.y < 200 ? limb.anchor.y - 40 : limb.anchor.y - 120)}px`
                 }}
               >
                 {/* Branch Pillar Label */}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand text-white shadow-xs text-[10px] font-bold uppercase mb-1.5 w-max">
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand text-white shadow-xs text-[10px] font-bold uppercase mb-1.5 w-max">
                   <GitBranch size={10} />
                   <span>{limb.pillar}: {limb.name.split(' ')[0]}</span>
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setTargetLimbId(limb.id);
                       setModalOpen(true);
                     }}
@@ -457,7 +482,7 @@ export default function OrganicTreeRoadmap({ project, onRefreshProject }) {
                 </div>
 
                 {/* Feature Leaves attached to this branch */}
-                <div className="space-y-1.5 w-48">
+                <div className="space-y-1.5 w-52 max-h-[220px] overflow-y-auto pr-1">
                   {limbFeatures.map((f) => {
                     const st = STAGE_STYLES[f.status] || STAGE_STYLES.planned;
 
@@ -466,28 +491,51 @@ export default function OrganicTreeRoadmap({ project, onRefreshProject }) {
                         key={f.id}
                         draggable={true}
                         onDragStart={(e) => handleFeatureDragStart(e, f.id)}
-                        className="p-2 bg-card/95 backdrop-blur-xs border border-line hover:border-brand/50 rounded-xl shadow-xs transition-all duration-150 cursor-grab active:cursor-grabbing hover:scale-102 group/card"
+                        className="p-2.5 bg-card/95 backdrop-blur-xs border border-line hover:border-brand/50 rounded-xl shadow-xs transition-all duration-150 cursor-grab active:cursor-grabbing hover:scale-101 group/card"
                       >
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            onClick={(e) => handleCycleStage(f.id, e)}
-                            title="Click to cycle stage"
-                            className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase border cursor-pointer ${st.bg}`}
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          {/* Stage Dropdown Selector */}
+                          <select
+                            value={f.status}
+                            onChange={(e) => handleSetFeatureStage(f.id, e.target.value, e)}
+                            className={`text-[9.5px] font-bold uppercase border rounded px-1.5 py-0.5 cursor-pointer focus:outline-none ${st.bg}`}
+                            title="Change stage"
                           >
-                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${st.dot}`} />
-                            {st.label}
-                          </span>
+                            <option value="ideas">Ideas</option>
+                            <option value="planned">Planned</option>
+                            <option value="building">Building</option>
+                            <option value="review">Review</option>
+                            <option value="ready">Ready</option>
+                            <option value="shipped">Shipped</option>
+                          </select>
 
-                          <button
-                            onClick={(e) => handleDeleteFeature(f.id, e)}
-                            className="text-mute hover:text-rose-600 opacity-0 group-hover/card:opacity-100 transition p-0.5"
-                            title="Prune feature"
-                          >
-                            <Trash2 size={10} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            {/* Phase / Branch Selector */}
+                            <select
+                              value={f.limbId}
+                              onChange={(e) => handleMoveToLimb(f.id, e.target.value, e)}
+                              className="text-[9px] font-bold bg-card2 border border-line rounded px-1 py-0.5 text-ink2 hover:text-ink cursor-pointer focus:outline-none"
+                              title="Move feature to another branch"
+                            >
+                              {BASE_BRANCHES.map(b => (
+                                <option key={b.id} value={b.id}>
+                                  {b.pillar}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteFeature(f.id, e)}
+                              className="text-mute hover:text-rose-600 opacity-60 hover:opacity-100 transition p-0.5"
+                              title="Prune feature"
+                            >
+                              <Trash2 size={10} />
+                            </button>
+                          </div>
                         </div>
 
-                        <h5 className="text-[11.5px] font-semibold text-ink leading-tight mt-1 line-clamp-1">
+                        <h5 className="text-[11.5px] font-semibold text-ink leading-tight mt-1 line-clamp-2">
                           {f.title}
                         </h5>
 
@@ -625,3 +673,4 @@ export default function OrganicTreeRoadmap({ project, onRefreshProject }) {
     </div>
   );
 }
+

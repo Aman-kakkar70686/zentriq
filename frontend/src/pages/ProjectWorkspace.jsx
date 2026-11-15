@@ -64,9 +64,9 @@ export default function ProjectWorkspace() {
     }
   };
 
-  // Fetch single project detailed view
-  const fetchProjectDetail = async (id) => {
-    setDetailLoading(true);
+  // Fetch single project detailed view (isSilent preserves scroll position & prevents unmounting)
+  const fetchProjectDetail = async (id, isSilent = false) => {
+    if (!isSilent) setDetailLoading(true);
     try {
       const res = await api.get(`/projects/${id}`);
       setSelectedProject(res.data);
@@ -81,7 +81,7 @@ export default function ProjectWorkspace() {
       console.error('Error fetching project detail:', err);
       if (toast) toast('Could not load project details');
     } finally {
-      setDetailLoading(false);
+      if (!isSilent) setDetailLoading(false);
     }
   };
 
@@ -668,12 +668,12 @@ export default function ProjectWorkspace() {
                 ))}
               </div>
 
-              {/* TAB 0: ROADMAP & ORGANIC TREE */}
+              {/* TAB 0: ROADMAP (ORGANIC TREE - IMAGE 3 STYLE) */}
               {activeTab === 'roadmap' && (
                 <TreeRoadmap
                   project={selectedProject}
                   onUpdateProject={(updated) => setSelectedProject(updated)}
-                  onRefreshProject={() => fetchProjectDetail(selectedProject.id)}
+                  onRefreshProject={() => fetchProjectDetail(selectedProject.id, true)}
                 />
               )}
 
@@ -681,7 +681,7 @@ export default function ProjectWorkspace() {
               {activeTab === 'sprints' && (
                 <HorizontalSprintRoadmap
                   project={selectedProject}
-                  onRefreshProject={() => fetchProjectDetail(selectedProject.id)}
+                  onRefreshProject={() => fetchProjectDetail(selectedProject.id, true)}
                 />
               )}
 

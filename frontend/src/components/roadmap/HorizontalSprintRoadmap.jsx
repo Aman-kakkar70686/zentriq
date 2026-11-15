@@ -253,57 +253,7 @@ export default function HorizontalSprintRoadmap({ project, onRefreshProject }) {
 
   return (
     <div className="space-y-6">
-      {/* 1. HORIZONTAL PRODUCT FLOW PIPELINE BAR (MATCHING IMAGE 1) */}
-      <div className="bg-card border border-line rounded-2xl p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-          <div>
-            <h3 className="text-sm font-bold text-ink">Project Stage Flow & Roadmap Velocity</h3>
-            <p className="text-xs text-mute">
-              Drag and drop cards across stages horizontally from Backlog Ideas to Shipped Production.
-            </p>
-          </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand/10 text-brand">
-            {tasks.length} Total Deliverables
-          </span>
-        </div>
-
-        {/* Horizontal Pipeline Steps */}
-        <div className="relative py-2">
-          {/* Connecting Line */}
-          <div className="hidden sm:block absolute top-7 left-8 right-8 h-0.5 border-t-2 border-dashed border-line z-0" />
-
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 relative z-10">
-            {STAGES.map((st, idx) => {
-              const count = stageCounts[st.key] || 0;
-              return (
-                <div
-                  key={st.key}
-                  className="bg-card border border-line rounded-xl p-3 text-center transition hover:border-brand/40 group cursor-default"
-                >
-                  <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <span className={`w-2 h-2 rounded-full ${st.dot}`} />
-                    <span className="text-xl font-extrabold text-ink group-hover:text-brand transition">
-                      {count}
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-mute block">
-                    {st.label}
-                  </span>
-                  {/* Visual mini dots */}
-                  <div className="flex items-center justify-center gap-0.5 mt-1.5">
-                    {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
-                      <span key={i} className={`w-1 h-1 rounded-full ${st.dot}`} />
-                    ))}
-                    {count > 5 && <span className="text-[9px] text-mute font-bold">+</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. FILTER & TOOLBAR */}
+      {/* FILTER & TOOLBAR */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card border border-line rounded-xl p-3">
         <div className="flex items-center gap-2 flex-1">
           <div className="relative flex-1 max-w-xs">
@@ -552,3 +502,4 @@ export default function HorizontalSprintRoadmap({ project, onRefreshProject }) {
     </div>
   );
 }
+
