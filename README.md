@@ -15,7 +15,7 @@ Full-stack enterprise AI Product Management and Development Intelligence Platfor
 | API communication | REST + Axios |
 
 ```
-productflow/
+zentriq/
   backend/    FastAPI app  (app/main.py, models.py, routers/, services.py, seed.py)
   frontend/   React app    (src/pages/Overview.jsx, src/components/, src/api/client.js)
 ```
