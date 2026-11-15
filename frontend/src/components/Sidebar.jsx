@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, FileCheck2, Folder, HelpCircle, History, Inbox, LayoutGrid, LineChart, Mail, Route, Settings, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
+import { Calendar, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, FileCheck2, Folder, HelpCircle, History, LayoutGrid, LineChart, Mail, Route, Settings, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Dot, Logo } from './ui';
@@ -153,7 +153,6 @@ export default function Sidebar() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
-        <Item icon={BarChart3} label="Analytics" onClick={() => openDrawer('analytics')} />
         
         <Group>AI Workspace</Group>
         <Item
@@ -230,17 +229,7 @@ export default function Sidebar() {
           }}
         />
 
-        <Group>Projects</Group>
-        {data?.projects.map((p) => (
-          <button key={p.id} onClick={() => openDrawer('project', p.id)} className="group relative flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-left text-sm font-medium text-[#B9BDB2] hover:bg-white/10 hover:text-[#F7F6F2]">
-            <span className="w-5 h-5 rounded-md border border-white/15 bg-white/5 grid place-items-center text-[11px] font-semibold">{p.name[0]}</span>
-            <span className="truncate">{p.name}</span>
-            <span className="ml-auto text-xs text-[#D9DCD2] opacity-0 group-hover:opacity-100">{p.progress}%</span>
-            <Dot className={`${p.status === 'At Risk' ? 'bg-amber' : 'bg-ok'} absolute right-2.5 group-hover:opacity-0`} />
-          </button>
-        ))}
         <div className="flex-1" />
-        <Item icon={Inbox} label="Inbox" count={data?.activity.length} onClick={() => openDrawer('activity')} />
         <Item icon={Settings} label="Settings" onClick={() => openDrawer('account')} />
         <Item icon={HelpCircle} label="Help" onClick={() => openDrawer('help')} />
         <button onClick={() => openDrawer('account')} className="mt-2 flex items-center gap-2.5 w-full px-2.5 py-2 border-t border-white/10 rounded-lg text-left text-[#F7F6F2] hover:bg-white/10">
