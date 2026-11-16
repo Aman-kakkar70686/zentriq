@@ -160,3 +160,4 @@ Upgrades the AI PM Copilot with a comprehensive Requirement Intelligence Engine 
 - Task stages are Ideas, Planned, Building, Review, Ready and Shipped (the stages shown on the dashboard).
 - Tables are created with `Base.metadata.create_all`. For a larger project, add Alembic for migrations.
 - Passwords are stored as bcrypt hashes. Tokens expire after `ACCESS_TOKEN_MINUTES`.
+- help
