@@ -5,8 +5,9 @@ import { SectionHead, Sheet } from './ui';
 
 const arrows = { up: ArrowUp, down: ArrowDown, flat: Minus };
 
-export default function ProjectPulse({ projects }) {
+export default function ProjectPulse({ projects = [] }) {
   const { openDrawer, navigateToProjects } = useApp();
+  const list = Array.isArray(projects) ? projects : [];
   const [on, setOn] = useState(false);
   useEffect(() => { const t = setTimeout(() => setOn(true), 60); return () => clearTimeout(t); }, []);
   return (
@@ -16,8 +17,8 @@ export default function ProjectPulse({ projects }) {
         action="View projects →"
         onAction={() => (navigateToProjects ? navigateToProjects() : openDrawer('projects'))}
       />
-      {projects.map((p) => {
-        const Arrow = arrows[p.momentum];
+      {list.map((p) => {
+        const Arrow = (p?.momentum && arrows[p.momentum]) || Minus;
         return (
           <button
             key={p.id}

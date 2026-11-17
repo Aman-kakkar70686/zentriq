@@ -34,7 +34,7 @@ export default function Overview() {
         <main className="max-w-[1240px] px-4 lg:px-10 pt-9 pb-24">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
             <div>
-              <h1 className="text-[30px] leading-tight font-semibold tracking-tight">Good morning, {(data?.me.name || user?.name || '').split(' ')[0]}.</h1>
+              <h1 className="text-[30px] leading-tight font-semibold tracking-tight">Good morning, {(data?.me?.name || user?.name || 'Aman').split(' ')[0]}.</h1>
               <p className="text-[15px] text-ink2 mt-1.5">Here's where your attention is needed today.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-center">
@@ -90,22 +90,22 @@ export default function Overview() {
 
           {data && (
             <>
-              <Metrics metrics={data.metrics} />
+              <Metrics metrics={data?.metrics} />
               <NextBestAction
-                nba={data.next_best_action}
-                meeting={data.meeting}
+                nba={data?.next_best_action}
+                meeting={data?.meeting}
                 onStopMeeting={() => setStopModalOpen(true)}
               />
               <div className="grid gap-6 mt-7 lg:grid-cols-2">
-                <FocusFeed focus={data.focus} />
-                <DecisionCenter decisions={data.decisions} />
+                <FocusFeed focus={data?.focus} />
+                <DecisionCenter decisions={data?.decisions} />
               </div>
-              <ProductFlow flow={data.flow} bottleneck={data.bottleneck} />
+              <ProductFlow flow={data?.flow} bottleneck={data?.bottleneck} />
               <div className="grid gap-6 mt-7 lg:grid-cols-2">
-                <ProjectPulse projects={data.projects} />
-                <DeadlineRadar deadlines={data.deadlines} count={data.metrics.deadlines} />
+                <ProjectPulse projects={data?.projects} />
+                <DeadlineRadar deadlines={data?.deadlines} count={data?.metrics?.deadlines || 0} />
               </div>
-              <ActivityTimeline activity={data.activity} signal={data.team.signal} />
+              <ActivityTimeline activity={data?.activity} signal={data?.team?.signal} />
             </>
           )}
         </main>

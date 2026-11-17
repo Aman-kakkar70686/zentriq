@@ -2,11 +2,12 @@ import { useApp } from '../context/AppContext';
 
 export default function Metrics({ metrics }) {
   const { openDrawer } = useApp();
+  const m = metrics || {};
   const items = [
-    ['Pending decisions', metrics.decisions, 'decisions'],
-    ['Active blockers', metrics.blockers, 'blocked'],
-    ['Upcoming deadlines', metrics.deadlines, 'deadlines'],
-    ['Active tasks', metrics.active_tasks, 'tasks'],
+    ['Pending decisions', m.decisions ?? 0, 'decisions'],
+    ['Active blockers', m.blockers ?? 0, 'blocked'],
+    ['Upcoming deadlines', m.deadlines ?? 0, 'deadlines'],
+    ['Active tasks', m.active_tasks ?? 0, 'tasks'],
   ];
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-4 mt-7">

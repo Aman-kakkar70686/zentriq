@@ -2,13 +2,14 @@ import { ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Empty, LinkBtn, SectionHead, Sheet } from './ui';
 
-export default function DecisionCenter({ decisions }) {
+export default function DecisionCenter({ decisions = [] }) {
   const { openDrawer } = useApp();
+  const list = Array.isArray(decisions) ? decisions : [];
   return (
     <Sheet id="decisions">
       <SectionHead title="Decision Center" sub="Waiting for you." />
-      {decisions.length === 0 && <Empty title="You're all caught up.">No decisions waiting for you.</Empty>}
-      {decisions.slice(0, 3).map((d) => (
+      {list.length === 0 && <Empty title="You're all caught up.">No decisions waiting for you.</Empty>}
+      {list.slice(0, 3).map((d) => (
         <button key={d.id} onClick={() => openDrawer('decision', d.id)} className="w-full flex items-center gap-3 min-h-[80px] px-6 border-t border-line text-left hover:bg-card2 group">
           <div className="flex-1 min-w-0">
             <b className="font-semibold">{d.title}</b>

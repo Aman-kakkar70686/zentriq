@@ -223,7 +223,7 @@ export default function ProjectWorkspace() {
       const matchesSearch =
         (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
         (p.description || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.members || []).some((m) => m.name.toLowerCase().includes(search.toLowerCase()));
+        (p.members || []).some((m) => (m?.name || m || '').toString().toLowerCase().includes(search.toLowerCase()));
 
       if (!matchesSearch) return false;
 

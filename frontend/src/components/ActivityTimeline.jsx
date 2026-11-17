@@ -12,8 +12,11 @@ export function ActivityLine({ a }) {
   );
 }
 
-export default function ActivityTimeline({ activity, signal }) {
+export default function ActivityTimeline({ activity = [], signal }) {
   const { openDrawer } = useApp();
+  const safeSignal = signal || { level: 'ok', text: 'Team capacity looks healthy' };
+  const list = Array.isArray(activity) ? activity : [];
+
   return (
     <Sheet className="mt-7">
       <div className="flex items-baseline gap-2.5 px-6 pt-5 pb-3">
@@ -21,17 +24,17 @@ export default function ActivityTimeline({ activity, signal }) {
         <LinkBtn className="ml-auto" onClick={() => openDrawer('activity')}>View activity →</LinkBtn>
       </div>
       <ul className="relative px-6 pb-2 before:content-[''] before:absolute before:left-[30px] before:top-4 before:bottom-6 before:w-px before:bg-line">
-        {activity.slice(0, 4).map((a) => (
+        {list.slice(0, 4).map((a) => (
           <li key={a.id} className="relative grid grid-cols-[14px_1fr_auto] gap-3.5 items-center py-2.5">
             <span className="w-2 h-2 rounded-full bg-sage ml-[3px] ring-4 ring-card" />
             <span className="text-sm"><ActivityLine a={a} /></span>
-            <time className="text-[12.5px] text-mute whitespace-nowrap">{timeAgo(a.created_at)}</time>
+            <time className="text-[12.5px] text-mute whitespace-nowrap">{timeAgo(a.created_at || new Date().toISOString())}</time>
           </li>
         ))}
       </ul>
       <div className="px-6 py-3.5 border-t border-line">
         <button onClick={() => openDrawer('team')} className="flex items-center gap-2 text-[13px] font-medium hover:underline">
-          <Dot className={signal.level === 'warn' ? 'bg-amber' : 'bg-ok'} />{signal.text} →
+          <Dot className={safeSignal.level === 'warn' ? 'bg-amber' : 'bg-ok'} />{safeSignal.text} →
         </button>
       </div>
     </Sheet>

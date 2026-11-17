@@ -14,7 +14,151 @@ const getStoredUser = () => {
   }
 };
 
-const DEFAULT_OVERVIEW = {
+export const DEFAULT_USERS = [
+  { id: 1, name: 'Aman Kakkar', email: 'amankakkar70686@gmail.com', role: 'Product Manager' },
+  { id: 2, name: 'Rahul Sharma', email: 'rahul@zentriq.dev', role: 'Frontend Engineer' },
+  { id: 3, name: 'Arjun Verma', email: 'arjun@zentriq.dev', role: 'QA Lead' },
+  { id: 4, name: 'Sarah Chen', email: 'sarah@zentriq.dev', role: 'Backend Lead' },
+  { id: 5, name: 'David Kim', email: 'david@zentriq.dev', role: 'DevOps Engineer' }
+];
+
+export const DEFAULT_TASKS = [
+  {
+    id: 1,
+    title: '1-Click Biometric Auth Flow',
+    description: 'Implement biometric WebAuthn credentials login and FaceID/TouchID prompt for zero-friction sign-in.',
+    status: 'shipped',
+    priority: 'high',
+    due_date: '2026-11-10',
+    project_id: 1,
+    project: 'E-Commerce Platform',
+    assignee_id: 1,
+    assignee: 'Aman Kakkar',
+    assignee_email: 'amankakkar70686@gmail.com',
+    is_blocked: false,
+    blocked_reason: null,
+    blocked_days: 0,
+    task_type: 'feature',
+    qa_status: 'passed',
+    bug_severity: null
+  },
+  {
+    id: 2,
+    title: 'Shipment Tracking UI',
+    description: 'Real-time telemetry map tracking integration with live courier GPS coordinates.',
+    status: 'building',
+    priority: 'high',
+    due_date: '2026-11-20',
+    project_id: 2,
+    project: 'VSLL Logistics Portal',
+    assignee_id: 2,
+    assignee: 'Rahul Sharma',
+    assignee_email: 'rahul@zentriq.dev',
+    is_blocked: true,
+    blocked_reason: 'Carrier Telemetry API credentials',
+    blocked_days: 3,
+    task_type: 'feature',
+    qa_status: null,
+    bug_severity: null
+  },
+  {
+    id: 3,
+    title: 'Notification Strategy',
+    description: 'Multi-channel notification engine routing SMS, WhatsApp and Email alerts for critical events.',
+    status: 'review',
+    priority: 'medium',
+    due_date: '2026-11-22',
+    project_id: 1,
+    project: 'E-Commerce Platform',
+    assignee_id: 4,
+    assignee: 'Sarah Chen',
+    assignee_email: 'sarah@zentriq.dev',
+    is_blocked: false,
+    blocked_reason: null,
+    blocked_days: 0,
+    task_type: 'feature',
+    qa_status: null,
+    bug_severity: null
+  },
+  {
+    id: 4,
+    title: 'Elasticsearch Catalog Indexer',
+    description: 'Zero-downtime cluster reindexing and autocomplete token generation for store products.',
+    status: 'building',
+    priority: 'high',
+    due_date: '2026-11-24',
+    project_id: 1,
+    project: 'E-Commerce Platform',
+    assignee_id: 5,
+    assignee: 'David Kim',
+    assignee_email: 'david@zentriq.dev',
+    is_blocked: false,
+    blocked_reason: null,
+    blocked_days: 0,
+    task_type: 'feature',
+    qa_status: null,
+    bug_severity: null
+  },
+  {
+    id: 5,
+    title: 'Stripe & Razorpay Payment Webhooks',
+    description: 'Verify HMAC signatures and automate order fulfillment state transitions upon payment receipt.',
+    status: 'planned',
+    priority: 'high',
+    due_date: '2026-11-25',
+    project_id: 1,
+    project: 'E-Commerce Platform',
+    assignee_id: 1,
+    assignee: 'Aman Kakkar',
+    assignee_email: 'amankakkar70686@gmail.com',
+    is_blocked: false,
+    blocked_reason: null,
+    blocked_days: 0,
+    task_type: 'feature',
+    qa_status: null,
+    bug_severity: null
+  },
+  {
+    id: 6,
+    title: 'Automated GST Invoice PDF Generation',
+    description: 'Create compliant multi-state GST tax invoices as downloadable PDFs after successful checkout.',
+    status: 'ideas',
+    priority: 'low',
+    due_date: '2026-11-30',
+    project_id: 1,
+    project: 'E-Commerce Platform',
+    assignee_id: 4,
+    assignee: 'Sarah Chen',
+    assignee_email: 'sarah@zentriq.dev',
+    is_blocked: false,
+    blocked_reason: null,
+    blocked_days: 0,
+    task_type: 'feature',
+    qa_status: null,
+    bug_severity: null
+  }
+];
+
+export const DEFAULT_MEETINGS = [
+  {
+    id: 1,
+    title: 'Weekly Sprint Sync & Release Review',
+    starts_at: new Date(Date.now() + 3600000).toISOString(),
+    participants: 4,
+    location: 'In-App Video Room',
+    teams_link: 'https://meet.jit.si/zentriq-room-weekly-sync',
+    status: 'scheduled',
+    attendees: [
+      { id: 1, name: 'Aman Kakkar', email: 'amankakkar70686@gmail.com' },
+      { id: 2, name: 'Rahul Sharma', email: 'rahul@zentriq.dev' },
+      { id: 3, name: 'Arjun Verma', email: 'arjun@zentriq.dev' },
+      { id: 4, name: 'Sarah Chen', email: 'sarah@zentriq.dev' }
+    ],
+    agenda: 'Review sprint deliverables, unblock telemetry API, and verify Vercel cloud deployment.'
+  }
+];
+
+export const DEFAULT_OVERVIEW = {
   me: { id: 1, name: 'Aman Kakkar', email: 'amankakkar70686@gmail.com' },
   metrics: { decisions: 2, blockers: 1, deadlines: 4, active_tasks: 7 },
   next_best_action: {
@@ -103,45 +247,82 @@ const DEFAULT_OVERVIEW = {
       overdue: 5,
       has_roadmap: true,
       has_proposal: true,
-      has_srs: true
+      has_srs: true,
+      members: [
+        { id: 1, name: 'Aman Kakkar', role: 'Product Manager' },
+        { id: 2, name: 'Rahul Sharma', role: 'Frontend Engineer' },
+        { id: 3, name: 'Arjun Verma', role: 'QA Lead' }
+      ]
     },
     {
       id: 2,
       name: 'VSLL Logistics Portal',
-      description: 'Carrier management, rate card imports, and warehouse tracking telemetry.',
-      progress: 29,
-      status: 'At Risk',
+      description: 'Fleet tracking, driver assignments, rate cards, and route planning.',
+      progress: 35,
+      status: 'On Track',
       momentum: 'flat',
       momentum_label: 'Stable',
-      note: '10 overdue tasks',
-      end_date: '2026-12-05',
-      tasks: 14,
-      shipped: 4,
+      note: '4 tasks completed this week',
+      end_date: '2026-12-15',
+      tasks: 20,
+      shipped: 7,
       overdue: 10,
       has_roadmap: true,
       has_proposal: true,
-      has_srs: false
+      has_srs: false,
+      members: [
+        { id: 1, name: 'Aman Kakkar', role: 'Product Manager' },
+        { id: 4, name: 'Sarah Chen', role: 'Backend Lead' }
+      ]
     }
   ],
   deadlines: [
-    { id: 1, title: 'Customs documents', project: 'VSLL Logistics Portal', due_date: '2026-11-20', days: 3 },
+    { id: 1, title: 'Carrier Telemetry API unblock', project: 'VSLL Logistics Portal', due_date: '2026-11-20', days: 3 },
     { id: 2, title: 'Rate card import', project: 'VSLL Logistics Portal', due_date: '2026-11-22', days: 5 },
     { id: 3, title: 'Razorpay Webhook verification', project: 'E-Commerce Platform', due_date: '2026-11-24', days: 7 }
   ],
-  team: [
-    { id: 1, name: 'Aman Kakkar', role: 'Product Manager', active_tasks: 3, capacity: 8, load: 'normal' },
-    { id: 2, name: 'Rahul Sharma', role: 'Frontend Engineer', active_tasks: 7, capacity: 8, load: 'heavy' },
-    { id: 3, name: 'Arjun Verma', role: 'QA Tester', active_tasks: 4, capacity: 8, load: 'normal' }
-  ],
+  team: {
+    members: [
+      { id: 1, name: 'Aman Kakkar', count: 3, dots: ['active', 'active', 'review'] },
+      { id: 2, name: 'Rahul Sharma', count: 7, dots: ['blocked', 'active', 'active', 'review'] },
+      { id: 3, name: 'Arjun Verma', count: 4, dots: ['active', 'upcoming'] }
+    ],
+    signal: { level: 'ok', text: 'Team capacity looks healthy' },
+    limit: 8
+  },
   activity: [
-    { id: 1, user: 'Aman Kakkar', text: 'pushed updates to Custom Tree Roadmap', time: '15m ago' },
-    { id: 2, user: 'Rahul Sharma', text: 'submitted Checkout Experience for review', time: '1h ago' },
-    { id: 3, user: 'Arjun Verma', text: 'passed QA testing for Biometric Auth', time: '3h ago' }
+    {
+      id: 1,
+      kind: 'updated',
+      actor: 'Aman Kakkar',
+      action: 'updated',
+      subject: 'Custom Tree Roadmap',
+      detail: 'with organic branches',
+      created_at: new Date(Date.now() - 15 * 60000).toISOString()
+    },
+    {
+      id: 2,
+      kind: 'review',
+      actor: 'Rahul Sharma',
+      action: 'submitted',
+      subject: 'Checkout Experience',
+      detail: 'for decision review',
+      created_at: new Date(Date.now() - 60 * 60000).toISOString()
+    },
+    {
+      id: 3,
+      kind: 'completed',
+      actor: 'Arjun Verma',
+      action: 'passed QA testing for',
+      subject: '1-Click Biometric Auth Flow',
+      detail: 'on staging environment',
+      created_at: new Date(Date.now() - 180 * 60000).toISOString()
+    }
   ],
   meeting: null
 };
 
-const DEFAULT_PROJECT_DETAIL = {
+export const DEFAULT_PROJECT_DETAIL = {
   id: 1,
   name: 'E-Commerce Platform',
   description: 'Online store with checkout, payments, and multi-vendor catalogue.',
@@ -191,10 +372,11 @@ const DEFAULT_PROJECT_DETAIL = {
       { id: 'limb-4', title: 'Fulfillment & Logistics', status: 'planned', assignee: 'Sarah Chen', priority: 'medium' },
       { id: 'limb-5', title: 'AI Intelligence & Growth', status: 'ideas', assignee: 'Arjun Verma', priority: 'medium' }
     ]
-  }
+  },
+  task_list: DEFAULT_TASKS
 };
 
-const DEFAULT_TEAM_WORKSPACE = {
+export const DEFAULT_TEAM_WORKSPACE = {
   overview: {
     total_members: 6,
     active_now: 4,
@@ -275,9 +457,18 @@ export function handleMockRequest(config) {
     });
   }
 
-  // 3. Projects List & Details
+  // 3. Users List
+  if (url.includes('/users')) {
+    return ok(DEFAULT_USERS);
+  }
+
+  // 4. Projects List & Details
   if (url.includes('/projects/')) {
-    const id = parseInt(url.split('/projects/')[1], 10) || 1;
+    const parts = url.split('/projects/')[1] || '';
+    const id = parseInt(parts.split('/')[0], 10) || 1;
+    if (parts.includes('/members')) {
+      return ok(DEFAULT_PROJECT_DETAIL.members);
+    }
     return ok({
       ...DEFAULT_PROJECT_DETAIL,
       id
@@ -297,7 +488,7 @@ export function handleMockRequest(config) {
     return ok(DEFAULT_OVERVIEW.projects);
   }
 
-  // 4. Team Workspace
+  // 5. Team Workspace & Capacity
   if (url.includes('/team/workspace')) {
     return ok(DEFAULT_TEAM_WORKSPACE);
   }
@@ -306,11 +497,89 @@ export function handleMockRequest(config) {
     return ok(DEFAULT_OVERVIEW.team);
   }
 
-  // 5. Tasks & Sprints
-  if (url.includes('/tasks')) {
-    return ok([]);
+  if (url.includes('/team/github/activity')) {
+    return ok(DEFAULT_TEAM_WORKSPACE.github);
   }
 
-  // 6. Generic safe fallback for all other API calls
+  // 6. Meetings
+  if (url.includes('/meetings')) {
+    if (method === 'post') {
+      return ok({ success: true, message: 'Meeting scheduled successfully' });
+    }
+    return ok(DEFAULT_MEETINGS);
+  }
+
+  // 7. Activity
+  if (url.includes('/activity')) {
+    return ok(DEFAULT_OVERVIEW.activity);
+  }
+
+  // 8. Decisions
+  if (url.includes('/decisions/')) {
+    const id = parseInt(url.split('/decisions/')[1], 10) || 1;
+    const match = DEFAULT_OVERVIEW.decisions.find((d) => d.id === id) || DEFAULT_OVERVIEW.decisions[0];
+    return ok(match);
+  }
+
+  if (url.includes('/decisions')) {
+    return ok(DEFAULT_OVERVIEW.decisions);
+  }
+
+  // 9. Tasks & Sprints
+  if (url.includes('/tasks/')) {
+    const parts = url.split('/tasks/')[1] || '';
+    const id = parseInt(parts.split('/')[0], 10) || 1;
+    // Action endpoints e.g. /tasks/1/advance, /tasks/1/resolve, /tasks/1/snooze
+    if (parts.includes('/')) {
+      return ok({ success: true, message: 'Task updated successfully' });
+    }
+    const match = DEFAULT_TASKS.find((t) => t.id === id) || DEFAULT_TASKS[0];
+    return ok(match);
+  }
+
+  if (url.includes('/tasks')) {
+    if (method === 'post') {
+      let body = {};
+      try { body = typeof config.data === 'string' ? JSON.parse(config.data) : config.data; } catch {}
+      const newTask = {
+        id: Date.now(),
+        title: body.title || 'New Task',
+        description: body.description || '',
+        status: body.status || 'planned',
+        priority: body.priority || 'medium',
+        due_date: body.due_date || '2026-11-28',
+        project: 'E-Commerce Platform',
+        project_id: body.project_id || 1,
+        assignee: 'Aman Kakkar',
+        assignee_id: 1,
+        assignee_email: 'amankakkar70686@gmail.com',
+        is_blocked: false,
+        blocked_reason: null,
+        blocked_days: 0,
+        task_type: body.task_type || 'feature'
+      };
+      return ok(newTask);
+    }
+    return ok(DEFAULT_TASKS);
+  }
+
+  // 10. Email & Notification Center
+  if (url.includes('/emails/recipients')) {
+    return ok({ recipients: DEFAULT_USERS });
+  }
+
+  if (url.includes('/emails/metrics')) {
+    return ok({ sent: 24, delivered: 24, failed: 0 });
+  }
+
+  if (url.includes('/emails/logs')) {
+    return ok({ logs: [], total: 0 });
+  }
+
+  if (url.includes('/emails')) {
+    return ok({ success: true, message: 'Email action executed successfully' });
+  }
+
+  // 11. Generic safe fallback for all other API calls
   return ok({ success: true, message: 'Cloud Demo Mode Active' });
 }

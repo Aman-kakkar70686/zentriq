@@ -1,13 +1,14 @@
 import { useApp } from '../context/AppContext';
 import { Dot, Sheet, SectionHead } from './ui';
 
-export default function ProductFlow({ flow, bottleneck }) {
+export default function ProductFlow({ flow = [], bottleneck }) {
   const { openDrawer } = useApp();
+  const list = Array.isArray(flow) ? flow : [];
   return (
     <Sheet className="mt-7">
       <SectionHead title="Product Flow" sub="Click a stage to see its tasks." />
       <div className="grid grid-cols-3 gap-2 px-4 pb-3 lg:flex lg:items-start lg:px-6">
-        {flow.map((s, i) => {
+        {list.map((s, i) => {
           const hot = s.label === bottleneck;
           return (
             <div key={s.key} className="contents lg:flex lg:flex-1 lg:items-start">
@@ -18,7 +19,7 @@ export default function ProductFlow({ flow, bottleneck }) {
                   {Array.from({ length: Math.min(s.count, 12) }).map((_, j) => <i key={j} className={`w-[7px] h-[7px] rounded-full ${hot ? 'bg-amber' : 'bg-sage'}`} />)}
                 </div>
               </button>
-              {i < flow.length - 1 && <div className="hidden lg:block flex-1 min-w-4 h-px bg-line mt-[22px]" />}
+              {i < list.length - 1 && <div className="hidden lg:block flex-1 min-w-4 h-px bg-line mt-[22px]" />}
             </div>
           );
         })}

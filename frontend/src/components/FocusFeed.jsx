@@ -5,8 +5,9 @@ import { Empty, KIND, LinkBtn, Sheet } from './ui';
 export const openFocusItem = (openDrawer, f) =>
   openDrawer(f.kind === 'decision' ? 'decision' : f.kind === 'moving' ? 'project' : 'task', f.ref);
 
-export default function FocusFeed({ focus }) {
+export default function FocusFeed({ focus = [] }) {
   const { openDrawer, openFocusModal } = useApp();
+  const list = Array.isArray(focus) ? focus : [];
   return (
     <Sheet>
       <div className="px-6 pt-5 pb-3 flex items-center justify-between">
@@ -40,9 +41,9 @@ export default function FocusFeed({ focus }) {
         </button>
       </div>
 
-      {focus.length === 0 && <Empty title="Nothing needs you right now.">Clear skies.</Empty>}
-      {focus.slice(0, 3).map((f) => {
-        const k = KIND[f.kind];
+      {list.length === 0 && <Empty title="Nothing needs you right now.">Clear skies.</Empty>}
+      {list.slice(0, 3).map((f) => {
+        const k = KIND[f?.kind] || KIND.blocked;
         return (
           <button key={f.id} onClick={() => openFocusItem(openDrawer, f)} className="group w-full grid grid-cols-[4px_1fr] sm:grid-cols-[4px_96px_1fr_auto] gap-x-3.5 gap-y-1 items-center min-h-[80px] py-3 pr-6 border-t border-line text-left hover:bg-card2 transition-colors">
             <span className={`self-stretch rounded-r ${k.dot} row-span-2 sm:row-span-1`} />
@@ -59,9 +60,9 @@ export default function FocusFeed({ focus }) {
           </button>
         );
       })}
-      {focus.length > 3 && (
+      {list.length > 3 && (
         <div className="px-6 py-3.5 border-t border-line">
-          <LinkBtn onClick={openFocusModal}>View all ({focus.length}) →</LinkBtn>
+          <LinkBtn onClick={openFocusModal}>View all ({list.length}) →</LinkBtn>
         </div>
       )}
     </Sheet>

@@ -5,16 +5,17 @@ import { Btn, Dot } from './ui';
 
 export default function NextBestAction({ nba, meeting, onStopMeeting }) {
   const { openDrawer, openInAppMeeting } = useApp();
-  const dot = { blocked: 'bg-amber', decision: 'bg-brand', review: 'bg-sage', clear: 'bg-ok' }[nba.kind];
+  if (!nba) return null;
+  const dot = { blocked: 'bg-amber', decision: 'bg-brand', review: 'bg-sage', clear: 'bg-ok' }[nba.kind] || 'bg-brand';
   return (
     <div className={`mt-7 grid gap-6 ${meeting ? 'lg:grid-cols-[3fr_2fr]' : ''}`}>
       <div className="flex items-center gap-4 bg-brands border border-[#DCE3D6] border-l-[3px] border-l-brand rounded-xl px-5 py-4">
         <Dot className={dot} />
         <div className="flex-1 min-w-0">
           <small className="block text-[11px] font-semibold tracking-wider text-mute">NEXT BEST ACTION</small>
-          <b className="font-semibold">{nba.title}</b> <span className="text-[13px] text-ink2">{nba.text}</span>
+          <b className="font-semibold">{nba.title || 'Attention Needed'}</b> <span className="text-[13px] text-ink2">{nba.text || ''}</span>
         </div>
-        {nba.target && <Btn variant="primary" onClick={() => openDrawer(nba.target.type, nba.target.id)}>{nba.action} →</Btn>}
+        {nba.target && <Btn variant="primary" onClick={() => openDrawer(nba.target.type, nba.target.id)}>{nba.action || 'View'} →</Btn>}
       </div>
       {meeting && (
         <div className="flex items-center gap-4 bg-card border border-line rounded-xl px-5 py-4">

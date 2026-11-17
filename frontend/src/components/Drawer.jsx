@@ -160,18 +160,24 @@ function ProjectView({ id }) {
 
 function TeamView() {
   const { data } = useApp();
-  const { members, signal, limit } = data.team;
+  const rawTeam = data?.team;
+  const members = Array.isArray(rawTeam?.members) ? rawTeam.members : Array.isArray(rawTeam) ? rawTeam : [];
+  const signal = rawTeam?.signal || { level: 'ok', text: 'Team capacity looks healthy' };
+  const limit = rawTeam?.limit || 8;
   const cls = { active: 'bg-ink border-ink', upcoming: 'border-mute', blocked: 'bg-amber border-amber', review: 'bg-sage border-sage' };
   return (
     <div>
-      {members.map((m) => (
-        <div key={m.id} className="flex items-center gap-3 py-3 px-2 border-b border-line">
-          <b className="w-14 font-semibold">{m.name}</b>
-          <div className="flex-1 flex flex-wrap gap-1.5">{m.dots.map((d, i) => <i key={i} className={`w-[11px] h-[11px] rounded-full border-[1.5px] ${cls[d]}`} />)}</div>
-          <span className="text-[13px] text-mute">{m.count} / {limit}</span>
-        </div>
-      ))}
-      <p className="p-2 mt-2 text-[13px] text-ink2"><Dot className={`mr-2 ${signal.level === 'warn' ? 'bg-amber' : 'bg-ok'}`} />{signal.text}</p>
+      {members.map((m) => {
+        const dots = Array.isArray(m?.dots) ? m.dots : [];
+        return (
+          <div key={m.id} className="flex items-center gap-3 py-3 px-2 border-b border-line">
+            <b className="w-14 font-semibold">{m.name}</b>
+            <div className="flex-1 flex flex-wrap gap-1.5">{dots.map((d, i) => <i key={i} className={`w-[11px] h-[11px] rounded-full border-[1.5px] ${cls[d] || cls.active}`} />)}</div>
+            <span className="text-[13px] text-mute">{m.count ?? dots.length} / {limit}</span>
+          </div>
+        );
+      })}
+      <p className="p-2 mt-2 text-[13px] text-ink2"><Dot className={`mr-2 ${signal?.level === 'warn' ? 'bg-amber' : 'bg-ok'}`} />{signal?.text || 'Team capacity looks healthy'}</p>
       <p className="px-2 text-xs text-mute">Filled = active · outline = upcoming · amber = blocked · sage = in review</p>
     </div>
   );
@@ -287,20 +293,20 @@ export default function Drawer() {
     blocked: ['Blocked work', <FocusList kind="blocked" />],
     task: ['Task', <TaskView id={id} key={id} />],
     decision: ['Decision', <DecisionView id={id} />],
-    decisions: [`Decisions waiting · ${data.decisions.length}`, data.decisions.length
-      ? data.decisions.map((d) => <Row key={d.id} dot="bg-brand" title={d.title} sub={d.question} onClick={() => openDrawer('decision', d.id)} />)
+    decisions: [`Decisions waiting · ${(data?.decisions || []).length}`, (data?.decisions || []).length
+      ? (data.decisions).map((d) => <Row key={d.id} dot="bg-brand" title={d.title} sub={d.question} onClick={() => openDrawer('decision', d.id)} />)
       : <Empty title="You're all caught up.">No decisions waiting for you.</Empty>],
-    stage: [`${LABEL[id]} tasks`, <StageView stage={id} key={id} />],
+    stage: [`${LABEL[id] || 'Stage'} tasks`, <StageView stage={id} key={id} />],
     tasks: ['All tasks', <TasksView />],
-    deadlines: ['Deadlines', data.deadlines.map((d) => (
+    deadlines: ['Deadlines', (data?.deadlines || []).map((d) => (
       <Row key={d.id} dot={urgent(d.days) ? 'bg-amber' : 'bg-mute'} title={d.title} sub={d.project} onClick={() => openDrawer('task', d.id)}
         right={<span className="text-right text-sm"><span className="block">{fmtDate(d.due_date)}</span><small className={urgent(d.days) ? 'text-amber' : 'text-mute'}>{dueLabel(d.days)}</small></span>} />))],
-    projects: ['Projects', data.projects.map((p) => <Row key={p.id} dot={p.status === 'At Risk' ? 'bg-amber' : 'bg-ok'} title={p.name} sub={`${p.status}${p.end_date ? ' · Due ' + fmtDate(p.end_date) : ''}`} right={<span className="text-sm text-ink2">{p.progress}%</span>} onClick={() => openDrawer('project', p.id)} />)],
-    project: [data.projects.find((p) => p.id === id)?.name || 'Project', <ProjectView id={id} />],
+    projects: ['Projects', (data?.projects || []).map((p) => <Row key={p.id} dot={p.status === 'At Risk' ? 'bg-amber' : 'bg-ok'} title={p.name} sub={`${p.status}${p.end_date ? ' · Due ' + fmtDate(p.end_date) : ''}`} right={<span className="text-sm text-ink2">{p.progress}%</span>} onClick={() => openDrawer('project', p.id)} />)],
+    project: [(data?.projects || []).find((p) => p.id === id)?.name || 'Project', <ProjectView id={id} />],
     team: ['Team · Capacity', <TeamView />],
     meetings: ['Meetings', <MeetingsView />],
     analytics: ['Analytics', <AnalyticsView />],
-    activity: ["What's Moving", data.activity.map((a) => <Row key={a.id} title={<ActivityLine a={a} />} right={<span className="text-xs text-mute">{timeAgo(a.created_at)}</span>} />)],
+    activity: ["What's Moving", (data?.activity || []).map((a) => <Row key={a.id} title={<ActivityLine a={a} />} right={<span className="text-xs text-mute">{timeAgo(a.created_at)}</span>} />)],
     account: ['Account', <AccountView />],
     help: ['Help', <HelpView />],
   };
