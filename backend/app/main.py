@@ -18,7 +18,10 @@ app = FastAPI(title="Zentriq API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 for r in (auth.router, dashboard.router, projects.router, tasks.router, decisions.router, team.router, ai.router, stories_qa.router, evaluation.router, email.router):
     app.include_router(r, prefix="/api")

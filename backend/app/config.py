@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 480
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "http://localhost:5173,https://zentriq-phi.vercel.app"
     capacity_limit: int = 8  # tasks per person before the team view warns
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
